@@ -64,7 +64,7 @@ streamlit
 **Step 4: Set Up Your Environment Variables**
 Unless running locally, the application needs API keys to connect to various LLM providers.
 
-1.  Find the file named `.env.example` in the project folder.
+1.  Make a file named `.env.example` in the project folder.
 2.  Duplicate it and rename the copy to just `.env`.
 3.  Open the new `.env` file and add your API keys.
 

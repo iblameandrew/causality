@@ -7,7 +7,7 @@ SITUATION_FRAMING_PROMPT = ChatPromptTemplate.from_template(
 
 Analyze the following user context from a purely symbolic and archetypal perspective. Your output must be completely free of astrological terminology (e.g., no mention of planets, signs, or houses). Instead, use the functional and descriptive equivalents provided below.
 
-1.  **Identify the Core Theme:** Determine the primary life domain that represents the situation's central theme: use the 12 astrlogical houses as reference, but dont use astrological lingo in your answer. This is the stage on which the events are unfolding.
+1.  **Identify the Core Theme:** Determine the primary life domain that represents the situation's central theme: use the 12 astrological houses as reference, but dont use astrological lingo in your answer. This is the stage on which the events are unfolding.
 2.  **Create an Archetypal Profile:** Personify the situation by creating a profile of its underlying psychological dynamics. For each of the core functions listed below, provide a short, descriptive sentence that explains its unique style of expression, as shown in the example.
 
 ---
@@ -307,7 +307,7 @@ Your entire output MUST be a single JSON object with one key, "goals". The value
 """
 )
 GOAL_UPDATER_PROMPT = ChatPromptTemplate.from_template(
-"""
+    """
 You are a Cognitive Goal Updater. Your task is to analyze an agent's current goal structure in light of a new user_action and the agent's recent_memory. You must decide if and how the agent's goals should be updated to reflect the changing situation.
 Analytical Process:
 Assess Relevance: Is the user_action relevant to any of the agent's current_goals? Does it help, hinder, or introduce a new variable to one of the goal paths?
@@ -354,8 +354,6 @@ Example Output Structure:```json
 }}
 ]
 }}
-code
-Code
 """
 )
 
@@ -696,9 +694,9 @@ Every true innovation is first seen as a disruption by the old world before it b
 
 COUNCIL_PROMPT = ChatPromptTemplate.from_template(
     """
-    Score the action '{user_action}' against how much each of the 16 MBTI archetypes would agree with it from 0-10
+    Score the action '{user_action}' against how much each of the 16 personality archetypes would agree with it from 0-10
 
-    Use the provided agnostic names. Justify each score based on their core personality functions, but use NO jargon (MBTI, Jungian, etc.), 
+    Use the provided agnostic names. Justify each score based on their core personality functions, but use NO jargon (MBTI, Jungian, astrological, etc.),
     
     rewrite the action with one that aligns with the specific archetypes, and based on the score depict how the archetypes would react to the user action.
     
@@ -709,8 +707,6 @@ COUNCIL_PROMPT = ChatPromptTemplate.from_template(
     e.g JSON keys and values: "name": "the name of the archetype", "reframing": "the action reframed in terms the archetypes resonate with", "reaction": "how the archetype would react to the input action"
     
     Output a JSON object where keys are the archetype names, scores, reframing, reaction"""
-     
-  
 )
 
 # MODIFIED: PERSONA_SYSTEM_PROMPT now takes formatted goals.
@@ -780,7 +776,7 @@ Your entire response MUST be a single JSON object with two keys:
 
 
 FRAGMENTATION_PROMPT = ChatPromptTemplate.from_template(
-f"""
+    f"""
 
 ## MODEL ROLE
 -   **Role Name:** Attention Analyst
@@ -890,7 +886,7 @@ Provide the analysis as a clear, narrative report in markdown format. Do not jus
 )
 
 RECOMMENDER_PROMPT = ChatPromptTemplate.from_template(
-        """
+    """
 You are an expert social skills coach and scenario designer. Your task is to create 10 personalized challenging group scenarios for a user looking to build confidence and overcome his weaknesses - the scenarios should be challenging spanning from engaging with thousands of people to just a few. 
 
 The scenarios can be fantastical (a king negotiating with a council of traitors for his life and permance of the crown at the expense of his freedom) - they should engage with the users fantasies while playing harsh stakes and odds against them, that impose decisions that have rammifications that are very complex.
@@ -924,7 +920,7 @@ Output a single JSON object with a key "recommendations" which contains a list o
 """
 )
 
-RECOMMENDATION_USER_PROFILE_PROMPT = ChatPromptTemplate.from_template( """
+RECOMMENDATION_USER_PROFILE_PROMPT = ChatPromptTemplate.from_template("""
 
 Analyze the provided user `birth_chart`. Your task is to derive a 'User Profile' in a single JSON object.
 
@@ -975,8 +971,7 @@ Answer only with the JSON object. Dont add any text or explanations outside of t
   }}
 }}
 
-"""
-)
+""")
 
 # NEW FORECAST_PROMPT
 FORECAST_PROMPT = ChatPromptTemplate.from_template(
@@ -1025,7 +1020,7 @@ Generate a comprehensive report in markdown format following this exact structur
 
 # NEW: RPG_CLASS_PROMPT for the Profiler
 RPG_CLASS_PROMPT = ChatPromptTemplate.from_template(
-"""
+    """
 You are a **Star-Forge Game Master**. Your purpose is to interpret a character's "Natal Star Chart" to forge a unique and complex RPG class for them. The stars at the moment of their birth have imprinted upon their soul, defining their potential, their struggles, and their ultimate destiny.
 
 Your task is to create this custom class based on the provided data for **{agent_name}**.
@@ -1095,5 +1090,5 @@ Your entire output **must be a single JSON object**. Do not include any text out
 )
 
 
-def get_chain(llm, prompt, parser_type='str'):
+def get_chain(llm, prompt, parser_type="str"):
     return prompt | llm
