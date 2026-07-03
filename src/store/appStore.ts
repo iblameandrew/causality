@@ -34,6 +34,9 @@ interface AppState {
   error: string | null;
   tick: number;
   rotationParams: RotationParams;
+  viewYaw: number;
+  viewTilt: number;
+  viewZoom: number;
 
   setApiKey: (key: string) => void;
   setModelSlug: (slug: string) => void;
@@ -47,6 +50,11 @@ interface AppState {
   utterToCells: (text: string) => void;
   incrementTick: () => void;
   clearError: () => void;
+  setViewYaw: (yaw: number) => void;
+  setViewTilt: (tilt: number) => void;
+  setViewZoom: (zoom: number) => void;
+  rotateViewYaw: (deltaSteps: number) => void;
+  resetView: () => void;
 }
 
 function buildCells(
@@ -112,6 +120,9 @@ export const useAppStore = create<AppState>()(
       error: null,
       tick: 0,
       rotationParams: { ...DEFAULT_ROTATION_PARAMS },
+      viewYaw: Math.PI / 4,
+      viewTilt: 0.7,
+      viewZoom: 1,
 
       setApiKey: (key) => {
         if (key) initOpenRouter(key);
@@ -273,6 +284,12 @@ export const useAppStore = create<AppState>()(
         });
       },
       clearError: () => set({ error: null }),
+
+      setViewYaw: (yaw) => set({ viewYaw: yaw }),
+      setViewTilt: (tilt) => set({ viewTilt: Math.max(0.2, Math.min(1.2, tilt)) }),
+      setViewZoom: (zoom) => set({ viewZoom: Math.max(0.4, Math.min(2, zoom)) }),
+      rotateViewYaw: (deltaSteps) => set({ viewYaw: get().viewYaw + deltaSteps * (Math.PI / 4) }),
+      resetView: () => set({ viewYaw: Math.PI / 4, viewTilt: 0.7, viewZoom: 1 }),
     }),
     {
       name: 'causality-settings',
@@ -280,6 +297,9 @@ export const useAppStore = create<AppState>()(
         apiKey: s.apiKey,
         modelSlug: s.modelSlug,
         rotationParams: s.rotationParams,
+        viewYaw: s.viewYaw,
+        viewTilt: s.viewTilt,
+        viewZoom: s.viewZoom,
       }),
       merge: (persisted, current) => ({
         ...current,

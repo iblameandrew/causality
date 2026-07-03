@@ -7,6 +7,7 @@ import { ScenarioPanel } from './components/ScenarioPanel';
 import { PersonaPanel } from './components/PersonaPanel';
 import { UtterancePanel } from './components/UtterancePanel';
 import { Legend } from './components/Legend';
+import { ViewControls } from './components/ViewControls';
 import './App.css';
 
 type MobilePanel = 'controls' | 'persona' | null;
@@ -79,6 +80,7 @@ export default function App() {
 
         <main className="viewport">
           <VoxelWorld />
+          <ViewControls />
           <Legend />
         </main>
 

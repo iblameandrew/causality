@@ -509,6 +509,26 @@ details pre {
 .dot.persona { background: #a29bfe; border-radius: 50%; }
 .dot.clique { background: #fd79a8; transform: rotate(45deg); }
 
+.ring-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: transparent;
+}
+
+.ring-dot.surface { border-color: #4ecdc4; }
+.ring-dot.memory { border-color: #ffeaa7; }
+.ring-dot.deep { border-color: #6c5ce7; }
+
+.legend-sep {
+  width: 1px;
+  height: 14px;
+  background: #2d3436;
+  padding: 0;
+  margin: 0 4px;
+}
+
 .error-toast {
   position: fixed;
   bottom: 20px;
@@ -925,6 +945,111 @@ details pre {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.view-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #14141fcc;
+  backdrop-filter: blur(8px);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2d3436;
+  z-index: 5;
+}
+
+.vc-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+.vc-row.vc-tilt,
+.vc-row.vc-zoom {
+  border-top: 1px solid #2d3436;
+  padding-top: 6px;
+}
+
+.vc-btn {
+  background: #2d3436;
+  border: 1px solid #636e72;
+  color: #dfe6e9;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vc-btn:hover {
+  background: #636e72;
+}
+
+.vc-btn.vc-reset {
+  font-size: 0.7rem;
+}
+
+.vc-label {
+  min-width: 36px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #b2bec3;
+  font-family: monospace;
+}
+
+.vc-icon {
+  color: #636e72;
+  font-size: 0.78rem;
+  width: 16px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .view-controls {
+    top: 8px;
+    right: 8px;
+    padding: 6px 8px;
+  }
+
+  .vc-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .view-controls {
+    flex-direction: row;
+    top: auto;
+    bottom: 64px;
+    right: 8px;
+    left: auto;
+    padding: 4px 6px;
+  }
+
+  .vc-row {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .vc-row.vc-tilt,
+  .vc-row.vc-zoom {
+    border-top: none;
+    border-left: 1px solid #2d3436;
+    padding-top: 0;
+    padding-left: 6px;
+  }
 }
 
 .collusion-block {

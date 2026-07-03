@@ -104,6 +104,22 @@ Collusions are detected fresh every tick — no manual declaration, no persisten
 | Collusion salience boost | 1.25× | Salience multiplier on colluding cells |
 | Collusion linger (ticks) | 3 | How long a dissolved collusion stays visible |
 
+### The isometric platform
+
+The voxel world lives on an orthographic isometric stage so rotation is intuitive and visible at a glance.
+
+- **Hex-tile platform** under the grid grounds each cell — the surface fades into a darker plane beyond the populated area
+- **Three orbital rings** wrap every cell at different heights and radii:
+  - **Surface ring** — tight, teal, low — fastest rotation; circles the cell at the trait/verb/noun tier
+  - **Memory ring** — mid, yellow — counter-rotates; mid-history tier
+  - **Deep ring** — wide, violet, high — slowest rotation; oldest history. Glows brighter during deep listening.
+- **Active element orbs** ride on each ring — a glowing sphere at the current angular position marks the qualifier that ring is currently attending to. Watch the orbs slide around their rings as the simulation ticks — that's rotatory attention in motion.
+- **Vertical beam** rises through the cell, tinted by the base color, intensifying during reactions and deep listening
+
+The view controls (top-right overlay) let you rotate the platform 45° at a time (8 cardinal isometric views), tilt the camera, zoom in/out, and reset. The view persists across reloads.
+
+---
+
 ### Inspecting a cell
 
 Select any cell in the 3D view. The Persona panel shows:
