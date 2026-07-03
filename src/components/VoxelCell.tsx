@@ -42,47 +42,65 @@ export function VoxelCell({
     if (!meshRef.current) return;
     const t = state.clock.elapsedTime;
 
+    const deepListening = cell.attention?.deepListening ?? false;
+    const surfacePhase = cell.attention?.rings.find((r) => r.depth === 'surface')?.phase ?? 0;
+    const deepPhase = cell.attention?.rings.find((r) => r.depth === 'deep')?.phase ?? 0;
+
     const listenPulse = cell.isListening
       ? Math.sin(t * 3 + cell.gridX) * 0.04 + 0.04
       : 0;
     const reactBounce = cell.isReacting
       ? Math.sin(t * 12) * 0.15 * cell.reactionIntensity
       : 0;
+    const deepPulse = deepListening ? Math.sin(t * 0.8) * 0.06 : 0;
     const breathe = Math.sin(t * 1.5 + cell.gridZ * 0.5) * 0.02;
     const gestating = !cell.persona ? Math.sin(t * 5 + cell.gridX) * 0.06 : 0;
 
-    meshRef.current.position.y = 0.3 + listenPulse + reactBounce + breathe + gestating + conwayOffset;
-    meshRef.current.rotation.y = Math.sin(t * 0.5 + cell.gridX) * 0.08;
+    meshRef.current.position.y =
+      0.3 + listenPulse + reactBounce + deepPulse + breathe + gestating + conwayOffset;
+
+    const rotSpeed = deepListening ? 0.15 : 0.5 + surfacePhase * 0.3;
+    meshRef.current.rotation.y = Math.sin(t * rotSpeed + cell.gridX) * (deepListening ? 0.14 : 0.08);
 
     if (glowRef.current) {
+      const salience = cell.attention?.salience ?? 0;
       const glowScale = cell.isReacting
         ? 1.3 + Math.sin(t * 10) * 0.2
-        : !cell.persona
-          ? 1.15 + Math.sin(t * 4) * 0.1
-          : cell.isListening
-            ? 1.1 + Math.sin(t * 2) * 0.05
-            : 1;
+        : deepListening
+          ? 1.2 + Math.sin(t * 0.6 + deepPhase * Math.PI * 2) * 0.12
+          : !cell.persona
+            ? 1.15 + Math.sin(t * 4) * 0.1
+            : cell.isListening
+              ? 1.1 + Math.sin(t * 2) * 0.05
+              : 1;
       glowRef.current.scale.setScalar(glowScale);
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = cell.isReacting
-        ? 0.5 * cell.reactionIntensity
-        : !cell.persona
-          ? 0.25 + Math.sin(t * 4) * 0.12
-          : cell.isListening
-            ? 0.15 + Math.sin(t * 2) * 0.08
-            : 0.05;
+        ? 0.5 * cell.reactionIntensity + salience * 0.2
+        : deepListening
+          ? 0.3 + Math.sin(t * 0.6) * 0.1
+          : !cell.persona
+            ? 0.25 + Math.sin(t * 4) * 0.12
+            : cell.isListening
+              ? 0.15 + Math.sin(t * 2) * 0.08
+              : 0.05;
     }
   });
 
+  const attentionSalience = cell.attention?.salience ?? 0;
+  const deepListening = cell.attention?.deepListening ?? false;
+
   const emissiveIntensity = cell.isReacting
-    ? 0.8 * cell.reactionIntensity
-    : isSelected
-      ? 0.5
-      : isCliqueSelected
-        ? 0.4
-        : !cell.persona
-          ? 0.35 + Math.sin(tick * 0.5) * 0.1
-          : 0.15;
+    ? 0.8 * cell.reactionIntensity + attentionSalience * 0.3
+    : deepListening
+      ? 0.55 + Math.sin(tick * 0.15) * 0.15
+      : isSelected
+        ? 0.5
+        : isCliqueSelected
+          ? 0.4
+          : !cell.persona
+            ? 0.35 + Math.sin(tick * 0.5) * 0.1
+            : 0.15 + attentionSalience * 0.2;
 
   return (
     <group position={[wx, 0, wz]}>
@@ -146,11 +164,11 @@ export function VoxelCell({
 
       {cell.persona ? (
         <mesh position={[0, 1.5, 0]}>
-          <sphereGeometry args={[0.08, 8, 8]} />
+          <sphereGeometry args={[deepListening ? 0.11 : 0.08, 8, 8]} />
           <meshStandardMaterial
-            color="#a29bfe"
-            emissive="#a29bfe"
-            emissiveIntensity={0.6}
+            color={deepListening ? '#6c5ce7' : '#a29bfe'}
+            emissive={deepListening ? '#6c5ce7' : '#a29bfe'}
+            emissiveIntensity={deepListening ? 0.9 : 0.6}
           />
         </mesh>
       ) : (

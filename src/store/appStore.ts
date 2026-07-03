@@ -3,7 +3,12 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import { initOpenRouter } from '../lib/openrouter';
 import { generateWords } from '../lib/wordGenerator';
-import { generateAllPersonas } from '../lib/personaGenerator';
+import {
+  advanceCellAttention,
+  applyUtteranceAttention,
+  computeEnsembleSalience,
+} from '../lib/attentionEngine';
+import { attachPersonaToCell, generateAllPersonas } from '../lib/personaGenerator';
 import { setLayoutCenter } from '../lib/gridLayout';
 import { layoutSemanticGradient } from '../lib/semanticLayout';
 import { createSuperCell, findResonantNeighbors } from '../lib/cliqueManager';
@@ -117,7 +122,7 @@ export const useAppStore = create<AppState>()(
             set({
               cells: get().cells.map((c) => {
                 const persona = personas.get(c.id);
-                return persona ? { ...c, persona } : c;
+                return persona ? attachPersonaToCell(c, persona) : c;
               }),
               personaProgress: { completed, total },
             });
@@ -156,29 +161,23 @@ export const useAppStore = create<AppState>()(
       },
 
       utterToCells: (text) => {
-        const lower = text.toLowerCase();
-        const words = lower.split(/\s+/);
+        const cells = get().cells;
+        const salienceMap = new Map<string, number>();
+
+        for (const cell of cells) {
+          if (!cell.attention) continue;
+          salienceMap.set(cell.id, computeEnsembleSalience(cell.attention, text, cell));
+        }
+
         set({
           lastUtterance: text,
-          cells: get().cells.map((cell) => {
-            const match = words.some(
-              (w) =>
-                cell.word.toLowerCase().includes(w) ||
-                w.includes(cell.word.toLowerCase()) ||
-                cell.persona?.verbs.some((v) => v.toLowerCase().includes(w)) ||
-                cell.persona?.nouns.some((n) => n.toLowerCase().includes(w)),
+          cells: cells.map((cell) => {
+            const neighbors = findResonantNeighbors(cell, cells);
+            const neighborSalience = Math.max(
+              0,
+              ...neighbors.map((n) => salienceMap.get(n.id) ?? 0),
             );
-            const neighbors = findResonantNeighbors(cell, get().cells);
-            const neighborReacting = neighbors.some((n) =>
-              words.some((w) => n.word.toLowerCase().includes(w)),
-            );
-            const intensity = match ? 1 : neighborReacting ? 0.5 : 0;
-            return {
-              ...cell,
-              isReacting: intensity > 0,
-              reactionIntensity: intensity,
-              isListening: true,
-            };
+            return applyUtteranceAttention(cell, text, neighborSalience);
           }),
         });
 
@@ -188,12 +187,21 @@ export const useAppStore = create<AppState>()(
               ...c,
               isReacting: false,
               reactionIntensity: 0,
+              attention: c.attention
+                ? { ...c.attention, salience: 0 }
+                : undefined,
             })),
           });
         }, 2000);
       },
 
-      incrementTick: () => set({ tick: get().tick + 1 }),
+      incrementTick: () => {
+        const tick = get().tick + 1;
+        set({
+          tick,
+          cells: get().cells.map((c) => advanceCellAttention(c, tick)),
+        });
+      },
       clearError: () => set({ error: null }),
     }),
     {

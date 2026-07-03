@@ -1,6 +1,35 @@
 export type WordType = 'verb' | 'noun';
 export type WordPolarity = 'related' | 'antonym';
 
+/** Depth tier — slower rotation implies deeper roots in cell history */
+export type AttentionDepth = 'surface' | 'memory' | 'deep';
+
+export interface AttentionElement {
+  id: string;
+  qualifier: string;
+  referents: string[];
+  depth: AttentionDepth;
+  sourceType: 'trait' | 'verb' | 'noun' | 'memory' | 'generated';
+  sourceId?: string;
+}
+
+export interface RotationRing {
+  depth: AttentionDepth;
+  period: number;
+  elementIds: string[];
+  phase: number;
+  activeIndex: number;
+}
+
+export interface AttentionState {
+  elements: AttentionElement[];
+  rings: RotationRing[];
+  ensemble: AttentionElement[];
+  salience: number;
+  focusPrompt: string;
+  deepListening: boolean;
+}
+
 export interface WordCell {
   id: string;
   word: string;
@@ -11,6 +40,7 @@ export interface WordCell {
   semanticX: number;
   semanticY: number;
   persona?: Persona;
+  attention?: AttentionState;
   isListening: boolean;
   isReacting: boolean;
   reactionIntensity: number;
@@ -34,6 +64,7 @@ export interface Persona {
   systemPrompt: string;
   memoryRegistry: MemoryLayer[];
   traits: string[];
+  attentionElements?: AttentionElement[];
 }
 
 export interface SuperCell {
@@ -43,6 +74,8 @@ export interface SuperCell {
   combinedPrompt: string;
   centerX: number;
   centerZ: number;
+  ensemblePrompt?: string;
+  deepListening?: boolean;
 }
 
 export interface GeneratedWord {
