@@ -1,6 +1,7 @@
 import { chatCompletion } from './openrouter';
 import { initAttentionState } from './attentionEngine';
-import type { AttentionDepth, MemoryLayer, Persona, WordCell } from '../types';
+import type { AttentionDepth, MemoryLayer, Persona, RotationParams, WordCell } from '../types';
+import { DEFAULT_ROTATION_PARAMS } from './attentionEngine';
 
 const BATCH_SIZE = 5;
 
@@ -142,10 +143,14 @@ export async function generateAllPersonas(
   }
 }
 
-export function attachPersonaToCell(cell: WordCell, persona: Persona): WordCell {
+export function attachPersonaToCell(
+  cell: WordCell,
+  persona: Persona,
+  rotationParams: RotationParams = DEFAULT_ROTATION_PARAMS,
+): WordCell {
   return {
     ...cell,
     persona,
-    attention: initAttentionState(persona, cell.id),
+    attention: initAttentionState(persona, cell.id, rotationParams),
   };
 }

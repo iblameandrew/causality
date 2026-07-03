@@ -4,15 +4,17 @@ import { v4 as uuid } from 'uuid';
 import { initOpenRouter } from '../lib/openrouter';
 import { generateWords } from '../lib/wordGenerator';
 import {
+  DEFAULT_ROTATION_PARAMS,
   advanceCellAttention,
   applyUtteranceAttention,
   computeEnsembleSalience,
+  refreshCellRotationParams,
 } from '../lib/attentionEngine';
 import { attachPersonaToCell, generateAllPersonas } from '../lib/personaGenerator';
 import { setLayoutCenter } from '../lib/gridLayout';
 import { layoutSemanticGradient } from '../lib/semanticLayout';
 import { createSuperCell, findResonantNeighbors } from '../lib/cliqueManager';
-import type { SuperCell, WordCell } from '../types';
+import type { RotationParams, SuperCell, WordCell } from '../types';
 
 interface AppState {
   apiKey: string;
@@ -28,9 +30,12 @@ interface AppState {
   lastUtterance: string;
   error: string | null;
   tick: number;
+  rotationParams: RotationParams;
 
   setApiKey: (key: string) => void;
   setModelSlug: (slug: string) => void;
+  setRotationParams: (params: Partial<RotationParams>) => void;
+  resetRotationParams: () => void;
   setScenario: (s: string) => void;
   generateScenario: () => Promise<void>;
   selectCell: (id: string | null) => void;
@@ -84,12 +89,32 @@ export const useAppStore = create<AppState>()(
       lastUtterance: '',
       error: null,
       tick: 0,
+      rotationParams: { ...DEFAULT_ROTATION_PARAMS },
 
       setApiKey: (key) => {
         if (key) initOpenRouter(key);
         set({ apiKey: key });
       },
       setModelSlug: (slug) => set({ modelSlug: slug }),
+
+      setRotationParams: (params) => {
+        const rotationParams = { ...get().rotationParams, ...params };
+        const tick = get().tick;
+        set({
+          rotationParams,
+          cells: get().cells.map((c) => refreshCellRotationParams(c, tick, rotationParams)),
+        });
+      },
+
+      resetRotationParams: () => {
+        const rotationParams = { ...DEFAULT_ROTATION_PARAMS };
+        const tick = get().tick;
+        set({
+          rotationParams,
+          cells: get().cells.map((c) => refreshCellRotationParams(c, tick, rotationParams)),
+        });
+      },
+
       setScenario: (s) => set({ scenario: s }),
 
       generateScenario: async () => {
@@ -122,7 +147,9 @@ export const useAppStore = create<AppState>()(
             set({
               cells: get().cells.map((c) => {
                 const persona = personas.get(c.id);
-                return persona ? attachPersonaToCell(c, persona) : c;
+                return persona
+                  ? attachPersonaToCell(c, persona, get().rotationParams)
+                  : c;
               }),
               personaProgress: { completed, total },
             });
@@ -161,12 +188,15 @@ export const useAppStore = create<AppState>()(
       },
 
       utterToCells: (text) => {
-        const cells = get().cells;
+        const { cells, rotationParams } = get();
         const salienceMap = new Map<string, number>();
 
         for (const cell of cells) {
           if (!cell.attention) continue;
-          salienceMap.set(cell.id, computeEnsembleSalience(cell.attention, text, cell));
+          salienceMap.set(
+            cell.id,
+            computeEnsembleSalience(cell.attention, text, cell, rotationParams),
+          );
         }
 
         set({
@@ -177,7 +207,11 @@ export const useAppStore = create<AppState>()(
               0,
               ...neighbors.map((n) => salienceMap.get(n.id) ?? 0),
             );
-            return applyUtteranceAttention(cell, text, neighborSalience);
+            return applyUtteranceAttention(
+              cell,
+              text,
+              neighborSalience * rotationParams.neighborSalienceDecay,
+            );
           }),
         });
 
@@ -196,10 +230,11 @@ export const useAppStore = create<AppState>()(
       },
 
       incrementTick: () => {
+        const { rotationParams } = get();
         const tick = get().tick + 1;
         set({
           tick,
-          cells: get().cells.map((c) => advanceCellAttention(c, tick)),
+          cells: get().cells.map((c) => advanceCellAttention(c, tick, rotationParams)),
         });
       },
       clearError: () => set({ error: null }),
@@ -209,6 +244,15 @@ export const useAppStore = create<AppState>()(
       partialize: (s) => ({
         apiKey: s.apiKey,
         modelSlug: s.modelSlug,
+        rotationParams: s.rotationParams,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<AppState>),
+        rotationParams: {
+          ...DEFAULT_ROTATION_PARAMS,
+          ...((persisted as Partial<AppState>)?.rotationParams ?? {}),
+        },
       }),
     },
   ),

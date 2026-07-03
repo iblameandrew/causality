@@ -3,16 +3,31 @@ import type {
   AttentionElement,
   AttentionState,
   Persona,
+  RotationParams,
   RotationRing,
   WordCell,
 } from '../types';
 
-/** Ticks per full rotation — higher period = slower = deeper in cell history */
-export const ROTATION_PERIODS: Record<AttentionDepth, number> = {
-  surface: 4,
-  memory: 16,
-  deep: 64,
+export const DEFAULT_ROTATION_PARAMS: RotationParams = {
+  surfacePeriod: 4,
+  memoryPeriod: 16,
+  deepPeriod: 64,
+  tickIntervalMs: 800,
+  deepPeakWindow: 0.28,
+  deepSalienceBoost: 1.35,
+  neighborSalienceDecay: 0.45,
 };
+
+function periodForDepth(depth: AttentionDepth, params: RotationParams): number {
+  switch (depth) {
+    case 'surface':
+      return params.surfacePeriod;
+    case 'memory':
+      return params.memoryPeriod;
+    case 'deep':
+      return params.deepPeriod;
+  }
+}
 
 const DEPTHS: AttentionDepth[] = ['surface', 'memory', 'deep'];
 
@@ -21,9 +36,9 @@ function ringActiveElement(ring: RotationRing, elements: AttentionElement[]): At
   return elements.find((e) => e.id === id) ?? null;
 }
 
-function isAtPeak(phase: number, slotCount: number): boolean {
+function isAtPeak(phase: number, slotCount: number, peakWindow: number): boolean {
   const slotPhase = (phase * slotCount) % 1;
-  return slotPhase < 0.28;
+  return slotPhase < peakWindow;
 }
 
 export function buildAttentionElements(persona: Persona, cellId: string): AttentionElement[] {
@@ -88,12 +103,12 @@ export function buildAttentionElements(persona: Persona, cellId: string): Attent
   return elements;
 }
 
-function buildRings(elements: AttentionElement[]): RotationRing[] {
+function buildRings(elements: AttentionElement[], params: RotationParams): RotationRing[] {
   return DEPTHS.map((depth) => {
     const ids = elements.filter((e) => e.depth === depth).map((e) => e.id);
     return {
       depth,
-      period: ROTATION_PERIODS[depth],
+      period: periodForDepth(depth, params),
       elementIds: ids.length > 0 ? ids : [],
       phase: 0,
       activeIndex: 0,
@@ -115,9 +130,13 @@ export function composeEnsemblePrompt(ensemble: AttentionElement[]): string {
   );
 }
 
-export function initAttentionState(persona: Persona, cellId: string): AttentionState {
+export function initAttentionState(
+  persona: Persona,
+  cellId: string,
+  params: RotationParams = DEFAULT_ROTATION_PARAMS,
+): AttentionState {
   const elements = buildAttentionElements(persona, cellId);
-  const rings = buildRings(elements);
+  const rings = buildRings(elements, params);
   const ensemble = rings
     .map((r) => ringActiveElement(r, elements))
     .filter((e): e is AttentionElement => e !== null);
@@ -129,19 +148,37 @@ export function initAttentionState(persona: Persona, cellId: string): AttentionS
     salience: 0,
     focusPrompt: composeEnsemblePrompt(ensemble),
     deepListening: rings.some(
-      (r) => r.depth === 'deep' && isAtPeak(r.phase, r.elementIds.length),
+      (r) =>
+        r.depth === 'deep' &&
+        isAtPeak(r.phase, r.elementIds.length, params.deepPeakWindow),
     ),
   };
 }
 
-export function advanceAttention(attention: AttentionState, tick: number): AttentionState {
+export function applyRotationParams(
+  attention: AttentionState,
+  params: RotationParams,
+): AttentionState {
+  const rings = attention.rings.map((ring) => ({
+    ...ring,
+    period: Math.max(1, periodForDepth(ring.depth, params)),
+  }));
+  return { ...attention, rings };
+}
+
+export function advanceAttention(
+  attention: AttentionState,
+  tick: number,
+  params: RotationParams = DEFAULT_ROTATION_PARAMS,
+): AttentionState {
   const rings = attention.rings.map((ring) => {
-    const phase = (tick % ring.period) / ring.period;
+    const period = Math.max(1, ring.period);
+    const phase = (tick % period) / period;
     const activeIndex =
       ring.elementIds.length > 0
         ? Math.floor(phase * ring.elementIds.length) % ring.elementIds.length
         : 0;
-    return { ...ring, phase, activeIndex };
+    return { ...ring, period, phase, activeIndex };
   });
 
   const ensemble = rings
@@ -150,7 +187,7 @@ export function advanceAttention(attention: AttentionState, tick: number): Atten
 
   const deepRing = rings.find((r) => r.depth === 'deep');
   const deepListening = deepRing
-    ? isAtPeak(deepRing.phase, deepRing.elementIds.length)
+    ? isAtPeak(deepRing.phase, deepRing.elementIds.length, params.deepPeakWindow)
     : false;
 
   return {
@@ -178,6 +215,7 @@ export function computeEnsembleSalience(
   attention: AttentionState,
   utterance: string,
   cell: WordCell,
+  params: RotationParams = DEFAULT_ROTATION_PARAMS,
 ): number {
   const lower = utterance.toLowerCase();
   const { ensemble } = attention;
@@ -214,16 +252,30 @@ export function computeEnsembleSalience(
 
   let salience = qualifierScore * 0.4 + referentScore * 0.5;
   if (wordMatch) salience += 0.2;
-  if (attention.deepListening) salience *= 1.35;
+  if (attention.deepListening) salience *= params.deepSalienceBoost;
 
   return Math.min(1, salience);
 }
 
-export function advanceCellAttention(cell: WordCell, tick: number): WordCell {
+export function advanceCellAttention(
+  cell: WordCell,
+  tick: number,
+  params: RotationParams = DEFAULT_ROTATION_PARAMS,
+): WordCell {
   if (!cell.persona) return cell;
 
-  const attention = cell.attention ?? initAttentionState(cell.persona, cell.id);
-  return { ...cell, attention: advanceAttention(attention, tick) };
+  const attention = cell.attention ?? initAttentionState(cell.persona, cell.id, params);
+  return { ...cell, attention: advanceAttention(attention, tick, params) };
+}
+
+export function refreshCellRotationParams(
+  cell: WordCell,
+  tick: number,
+  params: RotationParams,
+): WordCell {
+  if (!cell.persona || !cell.attention) return cell;
+  const updated = applyRotationParams(cell.attention, params);
+  return { ...cell, attention: advanceAttention(updated, tick, params) };
 }
 
 export function applyUtteranceAttention(
@@ -235,7 +287,7 @@ export function applyUtteranceAttention(
 
   const attention = cell.attention ?? initAttentionState(cell.persona, cell.id);
   const directSalience = computeEnsembleSalience(attention, utterance, cell);
-  const salience = Math.max(directSalience, neighborSalience * 0.45);
+  const salience = Math.max(directSalience, neighborSalience);
   const intensity = salience > 0.15 ? (salience > 0.5 ? 1 : 0.55) : 0;
 
   return {

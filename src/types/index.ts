@@ -90,7 +90,26 @@ export interface GeneratedWords {
   antonyms: GeneratedWord[];
 }
 
+/** Simulation parameters governing each cell's rotatory attention */
+export interface RotationParams {
+  /** Ticks per full surface ring cycle (traits, verbs, nouns) */
+  surfacePeriod: number;
+  /** Ticks per full memory ring cycle (mid-history layers) */
+  memoryPeriod: number;
+  /** Ticks per full deep ring cycle (oldest history) */
+  deepPeriod: number;
+  /** Milliseconds between simulation ticks */
+  tickIntervalMs: number;
+  /** Fraction of a deep slot (0–1) that counts as deep listening peak */
+  deepPeakWindow: number;
+  /** Salience multiplier while deep listening */
+  deepSalienceBoost: number;
+  /** Fraction of neighbor salience that propagates spatially */
+  neighborSalienceDecay: number;
+}
+
 export interface AppSettings {
   apiKey: string;
   modelSlug: string;
+  rotationParams: RotationParams;
 }

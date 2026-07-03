@@ -13,11 +13,12 @@ function Scene() {
   const selectedForClique = useAppStore((s) => s.selectedForClique);
   const selectCell = useAppStore((s) => s.selectCell);
   const incrementTick = useAppStore((s) => s.incrementTick);
+  const tickIntervalMs = useAppStore((s) => s.rotationParams.tickIntervalMs);
 
   useEffect(() => {
-    const id = setInterval(incrementTick, 800);
+    const id = setInterval(incrementTick, tickIntervalMs);
     return () => clearInterval(id);
-  }, [incrementTick]);
+  }, [incrementTick, tickIntervalMs]);
 
   return (
     <>

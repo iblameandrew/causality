@@ -1,4 +1,3 @@
-import { ROTATION_PERIODS } from '../lib/attentionEngine';
 import { buildRuntimePrompt } from '../lib/agentResponder';
 import { useAppStore } from '../store/appStore';
 import type { AttentionDepth } from '../types';
@@ -14,6 +13,7 @@ export function PersonaPanel() {
   const selectedCellId = useAppStore((s) => s.selectedCellId);
   const lastUtterance = useAppStore((s) => s.lastUtterance);
   const isGeneratingPersonas = useAppStore((s) => s.isGeneratingPersonas);
+  const rotationParams = useAppStore((s) => s.rotationParams);
 
   const cell = cells.find((c) => c.id === selectedCellId);
   const attention = cell?.attention;
@@ -75,7 +75,14 @@ export function PersonaPanel() {
                     <div key={ring.depth} className={`rotation-ring ${ring.depth}`}>
                       <div className="ring-header">
                         <span>{DEPTH_LABELS[ring.depth]}</span>
-                        <span className="ring-period">{ROTATION_PERIODS[ring.depth]}t/cycle</span>
+                        <span className="ring-period">
+                          {ring.period}t/cycle ·{' '}
+                          {(
+                            (rotationParams.tickIntervalMs * ring.period) /
+                            1000
+                          ).toFixed(1)}
+                          s
+                        </span>
                       </div>
                       <div className="ring-phase">
                         <div

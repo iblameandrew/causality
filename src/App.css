@@ -635,3 +635,43 @@ details pre {
 .memory-layer.mem-active {
   border-left-color: #ffeaa7;
 }
+
+.simulation-panel h2 {
+  color: #4ecdc4;
+}
+
+.param-label {
+  margin-bottom: 12px;
+}
+
+.param-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #b2bec3;
+  margin-bottom: 4px;
+}
+
+.param-value {
+  font-family: monospace;
+  color: #4ecdc4;
+}
+
+.param-label input[type='range'] {
+  width: 100%;
+  margin-top: 2px;
+  accent-color: #4ecdc4;
+}
+
+.param-hint {
+  display: block;
+  font-size: 0.62rem;
+  color: #636e72;
+  margin-top: 2px;
+}
+
+.reset-params {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.72rem;
+}
