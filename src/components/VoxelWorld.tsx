@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { VoxelCell } from './VoxelCell';
@@ -60,18 +60,43 @@ function Scene() {
         maxPolarAngle={Math.PI / 2.2}
         minDistance={10}
         maxDistance={55}
+        touches={{ ONE: 0, TWO: 2 }}
       />
     </>
   );
 }
 
+function useResponsiveCamera() {
+  const [camera, setCamera] = useState({ position: [12, 14, 12] as [number, number, number], fov: 45 });
+
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 600) {
+        setCamera({ position: [16, 18, 16], fov: 55 });
+      } else if (w < 900) {
+        setCamera({ position: [14, 16, 14], fov: 50 });
+      } else {
+        setCamera({ position: [12, 14, 12], fov: 45 });
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  return camera;
+}
+
 export function VoxelWorld() {
+  const camera = useResponsiveCamera();
   return (
     <Canvas
       shadows
-      camera={{ position: [12, 14, 12], fov: 45 }}
-      style={{ width: '100%', height: '100%' }}
+      camera={{ position: camera.position, fov: camera.fov }}
+      style={{ width: '100%', height: '100%', touchAction: 'none' }}
       gl={{ antialias: true }}
+      dpr={[1, 2]}
     >
       <color attach="background" args={['#0a0a12']} />
       <fog attach="fog" args={['#0a0a12', 20, 50]} />
