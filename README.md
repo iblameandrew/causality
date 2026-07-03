@@ -12,15 +12,17 @@
 
 Causality is an experiment in hyperrealistic simulation — modeling how people react to a given set of words, and how the impulse of those initial words sets an entire closed system in motion, branching into new scenarios, personas, and collective behavior.
 
-A scenario is decomposed into verbs and nouns arranged on a semantic gradient. Each word becomes a living cell with its own personality, memory, and disposition. When language is uttered into the field, cells resonate, cluster, and recombine — propagating the first impulse outward like a chain reaction through meaning itself.
+Think of each cell not as a static node, but as a **living tree**: an organic form rooted in history, with branches that reach into the present, and **rings that rotate** around it at different speeds. Fast rings at the canopy catch what is immediate. Slower rings along the branches cycle through lived memory. The deepest ring at the roots turns almost imperceptibly — surfacing what the cell has always carried.
 
-The aim is not a static word cloud, but a breathing system where initial conditions matter: the words you seed determine who emerges, how they hear you, and what scenarios unfold from the first spark.
+A scenario is decomposed into verbs and nouns arranged on a semantic gradient. Each word becomes one of these trees — a cell with its own personality, memory, and disposition. When language is uttered into the field, cells resonate through their current rings, cluster, and recombine — propagating the first impulse outward like growth through meaning itself.
+
+The aim is not a static word cloud, but a breathing forest where initial conditions matter: the words you seed determine who emerges, how they hear you, and what scenarios unfold from the first spark.
 
 ---
 
 ## Rotatory Attention
 
-Every cell that has emanated a persona carries a **rotatory attention system** — not a single fixed disposition, but a set of personality elements that cycle at different speeds. What the cell attends to at any moment is whatever its currently active elements **ensemble** into a referential frame.
+Every cell that has emanated a persona carries a **rotatory attention system** — the tree and its rings. Personality is not a single fixed disposition; it is a set of elements that cycle at hierarchical speeds. What the cell attends to at any moment is whatever its currently active elements **ensemble** into a referential frame, like rings aligning around the same trunk at once.
 
 ### Attention elements
 
@@ -34,13 +36,13 @@ Elements are generated with each persona (6–10 per cell, spread across depths)
 
 ### Three hierarchical rings
 
-Each cell runs three independent rotations. **Depth is relative to speed** — slower rotation means the element is rooted deeper in the cell's history:
+Each cell is wrapped in three independent rings, like the banner above — organic tree, rotating halos. **Depth is relative to speed**: the slower the ring, the deeper it sits in the cell's history.
 
-| Ring | Period | Speed | Source | Meaning |
-|------|--------|-------|--------|---------|
-| **Surface** | 4 ticks | Fast | traits, verbs, nouns | Present disposition — how the cell feels *right now* |
-| **Memory** | 16 ticks | Mid | recent memory layers | Lived experience cycling through awareness |
-| **Deep** | 64 ticks | Slow | oldest memory layers | Historical roots — what the cell has always carried |
+| Ring | Period | Speed | Tree | Source | Meaning |
+|------|--------|-------|------|--------|---------|
+| **Surface** | 4 ticks | Fast | Canopy | traits, verbs, nouns | Present disposition — what the cell feels *right now* |
+| **Memory** | 16 ticks | Mid | Branches | recent memory layers | Lived experience cycling through awareness |
+| **Deep** | 64 ticks | Slow | Roots | oldest memory layers | Historical roots — what the cell has always carried |
 
 The global tick advances on a configurable interval (default 800ms). On each tick, every ring computes its **phase** (0→1 over one full cycle) and selects the **active element** at that phase. One element per ring is live at any time.
 
@@ -70,7 +72,7 @@ This is the referential filter. An utterance that does not resonate with the ens
 
 ### Deep listening
 
-When the deep ring is at the **peak** of its current slot (the first ~28% of that element's turn), the cell enters **deep listening**. The slow rotation has surfaced something from the bottom of its history, and the cell attends from that depth. Deep listening amplifies salience by 35% and is visible in the 3D view (larger persona orb, slower rotation, violet glow) and in the Persona panel.
+When the deep ring — the one at the roots — reaches the **peak** of its current slot (the first ~28% of that element's turn), the cell enters **deep listening**. The slowest rotation has aligned; something from the bottom of its history rises through the trunk. The tree listens from its roots. Deep listening amplifies salience by 35% and is visible in the 3D view (larger persona orb, slower rotation, violet glow) and in the Persona panel.
 
 ### How utterances interact
 
