@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="https://raw.githubusercontent.com/iblameandrew/causality/main/public/banner.jpg"
+    src="https://raw.githubusercontent.com/iblameandrew/causality/main/public/banner-tree-rings.jpg"
     alt="Causality — organic tree with hierarchical rotating attention rings"
     width="100%"
   />
