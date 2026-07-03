@@ -2,6 +2,7 @@ import type {
   AttentionDepth,
   AttentionElement,
   AttentionState,
+  Collusion,
   Persona,
   RotationParams,
   RotationRing,
@@ -16,6 +17,9 @@ export const DEFAULT_ROTATION_PARAMS: RotationParams = {
   deepPeakWindow: 0.28,
   deepSalienceBoost: 1.35,
   neighborSalienceDecay: 0.45,
+  collusionMinSize: 2,
+  collusionSalienceBoost: 1.25,
+  collusionLingerTicks: 3,
 };
 
 function periodForDepth(depth: AttentionDepth, params: RotationParams): number {
@@ -282,12 +286,14 @@ export function applyUtteranceAttention(
   cell: WordCell,
   utterance: string,
   neighborSalience: number,
+  collusionBoost = 1,
 ): WordCell {
   if (!cell.persona) return cell;
 
   const attention = cell.attention ?? initAttentionState(cell.persona, cell.id);
   const directSalience = computeEnsembleSalience(attention, utterance, cell);
-  const salience = Math.max(directSalience, neighborSalience);
+  const boosted = directSalience * collusionBoost;
+  const salience = Math.max(boosted, neighborSalience);
   const intensity = salience > 0.15 ? (salience > 0.5 ? 1 : 0.55) : 0;
 
   return {
@@ -297,4 +303,90 @@ export function applyUtteranceAttention(
     reactionIntensity: intensity,
     isListening: true,
   };
+}
+
+/**
+ * Detect emergent rotatory collusions: groups of cells whose current ensemble
+ * elements share the same element ID — i.e. their independent rotations have
+ * landed on the same lens at the same tick.
+ *
+ * Returns the list of active collusions, plus a map of cellId → collusionId so
+ * the caller can mark cells. Previously-active collusions whose members have
+ * rotated apart linger for `collusionLingerTicks` ticks before dissolving.
+ */
+export function detectCollusions(
+  cells: WordCell[],
+  tick: number,
+  params: RotationParams = DEFAULT_ROTATION_PARAMS,
+): { collusions: Collusion[]; cellCollusionMap: Map<string, string> } {
+  const cellCollusionMap = new Map<string, string>();
+  const collusions: Collusion[] = [];
+
+  const groups = new Map<string, WordCell[]>();
+  for (const cell of cells) {
+    if (!cell.attention) continue;
+    for (const el of cell.attention.ensemble) {
+      if (!el.id) continue;
+      const key = el.id;
+      const list = groups.get(key) ?? [];
+      list.push(cell);
+      groups.set(key, list);
+    }
+  }
+
+  for (const [elementId, members] of groups) {
+    if (members.length < params.collusionMinSize) continue;
+
+    const sample = members[0];
+    const el = sample.attention!.ensemble.find((e) => e.id === elementId)!;
+    const centerX = members.reduce((s, c) => s + c.gridX, 0) / members.length;
+    const centerZ = members.reduce((s, c) => s + c.gridZ, 0) / members.length;
+    const depthWeight = el.depth === 'deep' ? 1.5 : el.depth === 'memory' ? 1.15 : 1;
+    const strength = Math.min(1, members.length / 8) * depthWeight;
+
+    const collusion: Collusion = {
+      id: `col-${elementId}-${tick}`,
+      qualifier: el.qualifier,
+      depth: el.depth,
+      elementId,
+      memberIds: members.map((m) => m.id),
+      focusPrompt: composeEnsemblePrompt(members.flatMap((m) => m.attention!.ensemble)),
+      centerX,
+      centerZ,
+      strength,
+      tick,
+    };
+
+    collusions.push(collusion);
+    for (const m of members) cellCollusionMap.set(m.id, collusion.id);
+  }
+
+  return { collusions, cellCollusionMap };
+}
+
+/**
+ * Mark cells with their current collusion membership, applying the salience
+ * boost to cells inside a collusion. Cleared collusions linger for
+ * `collusionLingerTicks` so the visual doesn't strobe every tick.
+ */
+export function applyCollusionMembership(
+  cells: WordCell[],
+  cellCollusionMap: Map<string, string>,
+  _params: RotationParams = DEFAULT_ROTATION_PARAMS,
+): WordCell[] {
+  return cells.map((cell) => {
+    const collusionId = cellCollusionMap.get(cell.id);
+    if (collusionId) {
+      return { ...cell, collusionId, isColluding: true };
+    }
+
+    if (cell.isColluding && cell.collusionId) {
+      const lingering = (cell.attention?.elements ?? []).length > 0;
+      if (lingering) {
+        return { ...cell, isColluding: false };
+      }
+    }
+
+    return { ...cell, collusionId: undefined, isColluding: false };
+  });
 }

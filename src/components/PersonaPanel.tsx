@@ -14,10 +14,15 @@ export function PersonaPanel() {
   const lastUtterance = useAppStore((s) => s.lastUtterance);
   const isGeneratingPersonas = useAppStore((s) => s.isGeneratingPersonas);
   const rotationParams = useAppStore((s) => s.rotationParams);
+  const collusions = useAppStore((s) => s.collusions);
 
   const cell = cells.find((c) => c.id === selectedCellId);
   const attention = cell?.attention;
-  const runtimePrompt = cell && lastUtterance ? buildRuntimePrompt(cell, lastUtterance) : null;
+  const myCollusion = cell?.collusionId
+    ? collusions.find((c) => c.id === cell.collusionId)
+    : undefined;
+  const runtimePrompt =
+    cell && lastUtterance ? buildRuntimePrompt(cell, lastUtterance, myCollusion) : null;
 
   if (!cell) {
     return (
@@ -118,6 +123,40 @@ export function PersonaPanel() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {myCollusion && (
+            <div className="collusion-block">
+              <h4>
+                Collusion — &ldquo;{myCollusion.qualifier}&rdquo;
+                <span className={`badge ${myCollusion.depth}`}>{myCollusion.depth}</span>
+              </h4>
+              <p className="hint">
+                This cell is currently locked in rotatory alignment with{' '}
+                <strong>{myCollusion.memberIds.length - 1}</strong> other cell
+                {myCollusion.memberIds.length - 1 === 1 ? '' : 's'} on the qualifier{' '}
+                <em>{myCollusion.qualifier}</em>. Strength{' '}
+                <span className="param-value">{myCollusion.strength.toFixed(2)}</span>.
+              </p>
+              <div className="collusion-members">
+                {myCollusion.memberIds.map((id) => {
+                  const other = cells.find((c) => c.id === id);
+                  if (!other) return null;
+                  return (
+                    <span
+                      key={id}
+                      className={`chip${id === cell.id ? ' self' : ''}${other.polarity === 'antonym' ? ' antonym' : ''}`}
+                    >
+                      {other.word}
+                    </span>
+                  );
+                })}
+              </div>
+              <details>
+                <summary>Collusion focus</summary>
+                <pre>{myCollusion.focusPrompt}</pre>
+              </details>
             </div>
           )}
 

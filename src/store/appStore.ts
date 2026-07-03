@@ -6,15 +6,17 @@ import { generateWords } from '../lib/wordGenerator';
 import {
   DEFAULT_ROTATION_PARAMS,
   advanceCellAttention,
+  applyCollusionMembership,
   applyUtteranceAttention,
   computeEnsembleSalience,
+  detectCollusions,
   refreshCellRotationParams,
 } from '../lib/attentionEngine';
 import { attachPersonaToCell, generateAllPersonas } from '../lib/personaGenerator';
 import { setLayoutCenter } from '../lib/gridLayout';
 import { layoutSemanticGradient } from '../lib/semanticLayout';
 import { createSuperCell, findResonantNeighbors } from '../lib/cliqueManager';
-import type { RotationParams, SuperCell, WordCell } from '../types';
+import type { Collusion, RotationParams, SuperCell, WordCell } from '../types';
 
 interface AppState {
   apiKey: string;
@@ -22,6 +24,7 @@ interface AppState {
   scenario: string;
   cells: WordCell[];
   superCells: SuperCell[];
+  collusions: Collusion[];
   selectedCellId: string | null;
   selectedForClique: string[];
   isGenerating: boolean;
@@ -73,6 +76,24 @@ function buildCells(
   }));
 }
 
+/**
+ * Merge newly-detected collusions with previously-active ones. Collusions
+ * whose members have rotated apart linger for `collusionLingerTicks` ticks
+ * before dissolving, so the visual doesn't strobe every cycle.
+ */
+function persistCollusions(
+  fresh: Collusion[],
+  previous: Collusion[],
+  tick: number,
+  params: RotationParams,
+): { collusions: Collusion[]; marked: WordCell[] | null } {
+  const freshIds = new Set(fresh.map((c) => c.id));
+  const lingering = previous.filter(
+    (c) => !freshIds.has(c.id) && tick - c.tick <= params.collusionLingerTicks,
+  );
+  return { collusions: [...fresh, ...lingering], marked: null };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -81,6 +102,7 @@ export const useAppStore = create<AppState>()(
       scenario: '',
       cells: [],
       superCells: [],
+      collusions: [],
       selectedCellId: null,
       selectedForClique: [],
       isGenerating: false,
@@ -136,6 +158,7 @@ export const useAppStore = create<AppState>()(
           set({
             cells,
             superCells: [],
+            collusions: [],
             selectedCellId: null,
             selectedForClique: [],
             isGenerating: false,
@@ -188,8 +211,12 @@ export const useAppStore = create<AppState>()(
       },
 
       utterToCells: (text) => {
-        const { cells, rotationParams } = get();
+        const { cells, rotationParams, collusions } = get();
         const salienceMap = new Map<string, number>();
+        const collusionByCell = new Map<string, string>();
+        for (const col of collusions) {
+          for (const id of col.memberIds) collusionByCell.set(id, col.id);
+        }
 
         for (const cell of cells) {
           if (!cell.attention) continue;
@@ -207,10 +234,13 @@ export const useAppStore = create<AppState>()(
               0,
               ...neighbors.map((n) => salienceMap.get(n.id) ?? 0),
             );
+            const inCollusion = collusionByCell.has(cell.id);
+            const boost = inCollusion ? rotationParams.collusionSalienceBoost : 1;
             return applyUtteranceAttention(
               cell,
               text,
               neighborSalience * rotationParams.neighborSalienceDecay,
+              boost,
             );
           }),
         });
@@ -232,9 +262,14 @@ export const useAppStore = create<AppState>()(
       incrementTick: () => {
         const { rotationParams } = get();
         const tick = get().tick + 1;
+        const advanced = get().cells.map((c) => advanceCellAttention(c, tick, rotationParams));
+        const { collusions, cellCollusionMap } = detectCollusions(advanced, tick, rotationParams);
+        const persisted = persistCollusions(collusions, get().collusions, tick, rotationParams);
+        const marked = applyCollusionMembership(persisted.marked ?? advanced, cellCollusionMap, rotationParams);
         set({
           tick,
-          cells: get().cells.map((c) => advanceCellAttention(c, tick, rotationParams)),
+          cells: marked,
+          collusions: persisted.collusions,
         });
       },
       clearError: () => set({ error: null }),

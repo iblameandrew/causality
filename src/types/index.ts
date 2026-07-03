@@ -45,6 +45,28 @@ export interface WordCell {
   isReacting: boolean;
   reactionIntensity: number;
   cliqueId?: string;
+  collusionId?: string;
+  isColluding?: boolean;
+}
+
+/** An emergent collusion — cells whose rotatory attention has aligned on the same element */
+export interface Collusion {
+  id: string;
+  /** The shared attention element qualifier the group converged on */
+  qualifier: string;
+  /** Depth at which the alignment occurred */
+  depth: AttentionDepth;
+  /** Element id all members share */
+  elementId: string;
+  memberIds: string[];
+  /** Cells in the collusion share the same focus prompt */
+  focusPrompt: string;
+  /** Center of mass on the grid */
+  centerX: number;
+  centerZ: number;
+  /** Strength of alignment — higher means more members + deeper overlap */
+  strength: number;
+  tick: number;
 }
 
 export interface MemoryLayer {
@@ -106,6 +128,12 @@ export interface RotationParams {
   deepSalienceBoost: number;
   /** Fraction of neighbor salience that propagates spatially */
   neighborSalienceDecay: number;
+  /** Minimum members required to form an emergent rotatory collusion */
+  collusionMinSize: number;
+  /** Salience multiplier applied to cells inside an active collusion */
+  collusionSalienceBoost: number;
+  /** How many ticks a collusion persists after members rotate apart */
+  collusionLingerTicks: number;
 }
 
 export interface AppSettings {

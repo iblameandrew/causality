@@ -927,6 +927,47 @@ details pre {
   to { opacity: 1; }
 }
 
+.collusion-block {
+  background: #ffeaa711;
+  border: 1px solid #ffeaa755;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 12px;
+}
+
+.collusion-block h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffeaa7;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.collusion-block .hint {
+  margin-bottom: 8px;
+}
+
+.collusion-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.chip.self {
+  background: #ffeaa733;
+  color: #ffeaa7;
+  border: 1px solid #ffeaa7;
+}
+
+.chip.antonym {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .detail-sidebar,

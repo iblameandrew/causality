@@ -1,19 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { VoxelCell } from './VoxelCell';
 import { SuperCellVisual } from './SuperCellVisual';
+import { CollusionVisual } from './CollusionVisual';
 import { useAppStore } from '../store/appStore';
 
 function Scene() {
   const cells = useAppStore((s) => s.cells);
   const superCells = useAppStore((s) => s.superCells);
+  const collusions = useAppStore((s) => s.collusions);
   const tick = useAppStore((s) => s.tick);
   const selectedCellId = useAppStore((s) => s.selectedCellId);
   const selectedForClique = useAppStore((s) => s.selectedForClique);
   const selectCell = useAppStore((s) => s.selectCell);
   const incrementTick = useAppStore((s) => s.incrementTick);
   const tickIntervalMs = useAppStore((s) => s.rotationParams.tickIntervalMs);
+
+  const memberPositions = useMemo(() => {
+    const map = new Map<string, [number, number]>();
+    for (const c of cells) map.set(c.id, [c.gridX, c.gridZ]);
+    return map;
+  }, [cells]);
 
   useEffect(() => {
     const id = setInterval(incrementTick, tickIntervalMs);
@@ -51,6 +59,14 @@ function Scene() {
 
       {superCells.map((sc) => (
         <SuperCellVisual key={sc.id} superCell={sc} />
+      ))}
+
+      {collusions.map((col) => (
+        <CollusionVisual
+          key={col.id}
+          collusion={col}
+          memberPositions={memberPositions}
+        />
       ))}
 
       <OrbitControls

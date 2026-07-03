@@ -1,4 +1,4 @@
-import type { AttentionState, Persona, SuperCell, WordCell } from '../types';
+import type { AttentionState, Collusion, Persona, SuperCell, WordCell } from '../types';
 
 function activeMemoryLayer(persona: Persona, attention?: AttentionState) {
   const deepEl = attention?.ensemble.find((e) => e.depth === 'deep' && e.sourceId);
@@ -17,6 +17,7 @@ function activeMemoryLayer(persona: Persona, attention?: AttentionState) {
 export function buildRuntimePrompt(
   cell: WordCell,
   utterance: string,
+  collusion?: Collusion,
 ): { system: string; user: string } | null {
   if (!cell.persona) return null;
 
@@ -28,8 +29,12 @@ export function buildRuntimePrompt(
     ? 'A deep, slow rotation has surfaced — you are listening from the roots of your history.'
     : 'Surface and memory rotations are cycling through your present awareness.';
 
+  const collusionNote = collusion
+    ? `\n\n[ROTATORY COLLUSION]\nYou are currently aligned with ${collusion.memberIds.length - 1} other cell${collusion.memberIds.length - 1 === 1 ? '' : 's'} on the qualifier "${collusion.qualifier}" at ${collusion.depth} depth. Honor this shared referential frame.`
+    : '';
+
   return {
-    system: `${persona.systemPrompt}\n\n[ROTATORY ATTENTION]\n${focus}\n${depthNote}`,
+    system: `${persona.systemPrompt}\n\n[ROTATORY ATTENTION]\n${focus}\n${depthNote}${collusionNote}`,
     user: layer
       ? `[Active memory (${layer.title}): ${layer.narrative} — felt as ${layer.emotionalTone}]\nUtterance: "${utterance}"\nRespond only through the referential frame of your current attention ensemble.`
       : `Utterance: "${utterance}"\nRespond only through the referential frame of your current attention ensemble.`,

@@ -75,6 +75,30 @@ const ROTATION_FIELDS: {
     max: 1,
     step: 0.05,
   },
+  {
+    key: 'collusionMinSize',
+    label: 'Collusion min size',
+    hint: 'Cells that must align on one element to form a collusion',
+    min: 2,
+    max: 8,
+    step: 1,
+  },
+  {
+    key: 'collusionSalienceBoost',
+    label: 'Collusion salience boost',
+    hint: 'Multiplier on salience for cells inside a collusion',
+    min: 1,
+    max: 2.5,
+    step: 0.05,
+  },
+  {
+    key: 'collusionLingerTicks',
+    label: 'Collusion linger (ticks)',
+    hint: 'Ticks a dissolved collusion stays visible before fading',
+    min: 0,
+    max: 16,
+    step: 1,
+  },
 ];
 
 export function SettingsPanel() {

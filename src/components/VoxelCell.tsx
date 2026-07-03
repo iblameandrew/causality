@@ -194,6 +194,19 @@ export function VoxelCell({
           />
         </mesh>
       )}
+
+      {cell.isColluding && (
+        <mesh position={[0, 2.0, 0]}>
+          <torusGeometry args={[0.18, 0.025, 6, 16]} />
+          <meshStandardMaterial
+            color="#ffeaa7"
+            emissive="#ffeaa7"
+            emissiveIntensity={0.9}
+            transparent
+            opacity={0.85}
+          />
+        </mesh>
+      )}
     </group>
   );
 }

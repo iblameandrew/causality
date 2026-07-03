@@ -82,6 +82,28 @@ A cell does not hear everything equally. It hears what its rotation happens to b
 
 When cells are grouped into a clique, their individual ensembles merge into a **hierarchical collective attention**. If any member is deep listening, the super-cell inherits that depth — the outer ring slows, the inner ring appears, and the combined prompt reflects all member referential frames.
 
+### Rotatory collusion
+
+Cliques are *declared* — you pick the members. **Collusions are *emergent***: they form on their own when independent rotations land on the same lens.
+
+On every tick, the engine groups cells whose current ensemble shares the same `elementId` (i.e. they happen to be attending through the same qualifier at the same depth). Any group of at least `collusionMinSize` (default 2) becomes a **collusion**:
+
+- A live counter-rotating ring appears at the group's center of mass, color-coded by depth (teal surface / yellow memory / violet deep)
+- Translucent lines connect every pair of members, forming a triangulated attention mesh
+- Each member gains a small halo above its voxel so you can spot colluding cells at a glance
+- Cells in the collusion receive a `collusionSalienceBoost` (default 1.25×) on their next utterance response — colluding cells resonate louder
+- When members rotate apart the collusion doesn't snap away instantly — it lingers for `collusionLingerTicks` (default 3) ticks so the dissolution is visible
+
+The collusion carries its own ephemeral `focusPrompt` built from the union of member ensembles. When a colluding cell responds, its runtime prompt gains a `[ROTATORY COLLUSION]` block noting the shared qualifier, depth, and ally count, telling the LLM to honor that collective referential frame.
+
+Collusions are detected fresh every tick — no manual declaration, no persistence. They are the system's way of saying: *these cells, by spinning at the right moment, are looking at the same thing.*
+
+| Parameter | Default | Effect |
+|-----------|---------|--------|
+| Collusion min size | 2 | Minimum aligned cells to form a collusion |
+| Collusion salience boost | 1.25× | Salience multiplier on colluding cells |
+| Collusion linger (ticks) | 3 | How long a dissolved collusion stays visible |
+
 ### Inspecting a cell
 
 Select any cell in the 3D view. The Persona panel shows:
@@ -89,8 +111,9 @@ Select any cell in the 3D view. The Persona panel shows:
 - The live **ensemble** chips (one per active ring)
 - **Rotation phase bars** for surface, memory, and deep
 - The composed **focus prompt** — what the cell is attending to right now
+- If the cell is currently in a **collusion**, the collusion block shows the shared qualifier, depth, member chips, and collective focus prompt
 - Which **memory layers** are active at each depth
-- The **runtime prompt** after an utterance, filtered through the current ensemble
+- The **runtime prompt** after an utterance, filtered through the current ensemble (and tagged with any active collusion)
 
 ---
 
