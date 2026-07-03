@@ -1,4 +1,4 @@
-![Causality — semantic impulse simulation](./public/banner.jpg)
+![Causality — hierarchical rotatory attention simulation](./public/banner.jpg)
 
 # Causality
 
