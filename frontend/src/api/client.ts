@@ -2,7 +2,11 @@ import type { BirthInput, ChatMessage, MatchManifest, MemorySpec, SkillSpec } fr
 
 export async function createMatch(
   people: BirthInput[],
-  options?: { max_units_per_faction?: number; include_mixtures?: boolean }
+  options?: {
+    max_units_per_faction?: number;
+    units_per_planet?: number;
+    include_mixtures?: boolean;
+  }
 ): Promise<MatchManifest> {
   const res = await fetch("/api/match", {
     method: "POST",

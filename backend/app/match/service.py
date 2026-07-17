@@ -39,13 +39,23 @@ def _map_size_for_factions(n: int) -> list[int]:
     return [side, side]
 
 
-def _units_per_faction(requested: int, faction_count: int) -> int:
-    """Keep total unit count tractable when many charts share the field."""
-    if faction_count <= 4:
-        return requested
-    # Soft budget ~72 total units; never drop below 4 per faction
-    budget = max(4, 72 // max(1, faction_count))
-    return min(requested, budget)
+def _units_per_faction_cap(
+    units_per_planet: int,
+    root_count: int,
+    mixture_count: int,
+    faction_count: int,
+    explicit_max: int | None,
+) -> int:
+    """Roster ceiling: planets × units_per_planet + mixtures, with soft total budget."""
+    natural = max(1, root_count) * max(1, units_per_planet) + max(0, mixture_count)
+    if explicit_max is not None:
+        natural = min(natural, explicit_max)
+    # Soft global budget so many factions stay playable
+    if faction_count > 6:
+        budget = max(units_per_planet, 96 // max(1, faction_count))
+        natural = min(natural, budget * max(1, root_count // 2 + 1))
+        natural = max(natural, units_per_planet)  # at least one planet worth
+    return max(units_per_planet, natural)
 
 
 def build_match(
@@ -64,8 +74,7 @@ def build_match(
         settings = settings.model_copy(update={"agent_mode": options.agent_mode})
 
     max_mix = options.max_mixtures_per_chart or settings.max_mixtures_per_chart
-    requested_units = options.max_units_per_faction or settings.max_units_per_faction
-    max_units = _units_per_faction(requested_units, len(people))
+    units_per_planet = max(1, min(24, int(options.units_per_planet or settings.units_per_planet)))
 
     charts: list[NatalChart] = []
     graphs: list[FeatureGraph] = []
@@ -83,7 +92,21 @@ def build_match(
             settings,
             include_mixtures=options.include_mixtures,
         )
-        roster = flatten_agents(agents, graph, chart.chart_id, max_units)
+        mix_count = len(graph.mixtures) if options.include_mixtures else 0
+        max_units = _units_per_faction_cap(
+            units_per_planet=units_per_planet,
+            root_count=len(graph.roots),
+            mixture_count=mix_count,
+            faction_count=len(people),
+            explicit_max=options.max_units_per_faction,
+        )
+        roster = flatten_agents(
+            agents,
+            graph,
+            chart.chart_id,
+            max_units=max_units,
+            units_per_planet=units_per_planet,
+        )
         factions.append(
             FactionManifest(
                 chart_id=chart.chart_id,
@@ -105,7 +128,7 @@ def build_match(
         meta={
             "agent_mode": settings.agent_mode,
             "people_count": len(people),
-            "units_per_faction": max_units,
+            "units_per_planet": units_per_planet,
             "unlimited_factions": True,
         },
     )

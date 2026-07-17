@@ -231,7 +231,13 @@ class MatchManifest(BaseModel):
 
 
 class MatchOptions(BaseModel):
-    max_units_per_faction: int = 24
+    max_units_per_faction: int | None = None
+    units_per_planet: int = Field(
+        default=3,
+        ge=1,
+        le=24,
+        description="How many units spawn from each planet/root feature (captain + children).",
+    )
     include_mixtures: bool = True
     max_mixtures_per_chart: int | None = None
     agent_mode: str | None = None

@@ -68,7 +68,7 @@ npm run dev
 
 Open http://localhost:5173 — the Vite proxy forwards `/api` to the backend.
 
-Add **any number of people** (no faction cap — use + chart, +5, or bulk Add N). Presets seed a few charts; bulk-add fills diversified birth data. **Generate match** and watch their myth-agents take the field. Inspect any unit for lineage, memories, energization, dialogue, and how crowded its aura is. Map size and units-per-faction scale so large multi-chart matches stay playable.
+Add **any number of people** (no faction cap — use + chart, +5, or bulk Add N). Set **Units per planet** (simulation parameter: how many units spawn from each planet/root feature). Presets seed a few charts; bulk-add fills diversified birth data. **Generate match** and watch their myth-agents take the field. Inspect any unit for lineage, memories, energization, dialogue, and how crowded its aura is.
 
 ## Environment
 

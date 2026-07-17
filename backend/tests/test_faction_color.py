@@ -1,5 +1,5 @@
 from app.domain.tables import faction_color
-from app.match.service import _map_size_for_factions, _units_per_faction
+from app.match.service import _map_size_for_factions, _units_per_faction_cap
 
 
 def test_faction_colors_unique_for_many():
@@ -15,7 +15,12 @@ def test_map_grows_with_factions():
     assert _map_size_for_factions(100)[0] <= 160
 
 
-def test_units_budget_for_many_factions():
-    assert _units_per_faction(18, 2) == 18
-    assert _units_per_faction(18, 20) < 18
-    assert _units_per_faction(18, 50) >= 4
+def test_units_cap_scales_with_planets():
+    cap = _units_per_faction_cap(
+        units_per_planet=3, root_count=10, mixture_count=4, faction_count=2, explicit_max=None
+    )
+    assert cap >= 3 * 10
+    cap_small = _units_per_faction_cap(
+        units_per_planet=1, root_count=5, mixture_count=0, faction_count=2, explicit_max=None
+    )
+    assert cap_small == 5

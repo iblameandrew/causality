@@ -11,6 +11,8 @@ export function ChartForm() {
   const generate = useMatchStore((s) => s.generate);
   const loading = useMatchStore((s) => s.loading);
   const error = useMatchStore((s) => s.error);
+  const unitsPerPlanet = useMatchStore((s) => s.unitsPerPlanet);
+  const setUnitsPerPlanet = useMatchStore((s) => s.setUnitsPerPlanet);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({ 0: true, 1: true });
   const [bulkCount, setBulkCount] = useState(5);
 
@@ -30,6 +32,39 @@ export function ChartForm() {
         <span className="muted">
           {people.length === 1 ? "faction" : "factions"} · unlimited
         </span>
+      </div>
+
+      <div className="sim-params">
+        <h2>Simulation</h2>
+        <div className="field">
+          <label htmlFor="units-per-planet">
+            Units per planet
+          </label>
+          <div className="param-row">
+            <input
+              id="units-per-planet"
+              type="range"
+              min={1}
+              max={12}
+              step={1}
+              value={unitsPerPlanet}
+              onChange={(e) => setUnitsPerPlanet(Number(e.target.value))}
+            />
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={unitsPerPlanet}
+              onChange={(e) => setUnitsPerPlanet(Number(e.target.value))}
+              aria-label="Units per planet value"
+              className="param-number"
+            />
+          </div>
+          <p className="muted" style={{ margin: "0.25rem 0 0", fontSize: "0.8rem" }}>
+            How many thought-units emanate from each planet/root (1 = captain only;
+            higher adds squad children and variants).
+          </p>
+        </div>
       </div>
 
       <div className="actions">

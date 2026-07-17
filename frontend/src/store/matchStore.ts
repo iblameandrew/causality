@@ -45,6 +45,8 @@ interface Store {
   sim: SimState | null;
   playing: boolean;
   speed: number;
+  /** Simulation parameter: units spawned from each planet/root feature. */
+  unitsPerPlanet: number;
   selectedUnitId: string | null;
   loading: boolean;
   error: string | null;
@@ -58,6 +60,7 @@ interface Store {
   removePerson: (index: number) => void;
   updatePerson: (index: number, patch: Partial<BirthInput>) => void;
   loadPresets: (count?: number) => void;
+  setUnitsPerPlanet: (n: number) => void;
   generate: () => Promise<void>;
   setPlaying: (v: boolean) => void;
   setSpeed: (v: number) => void;
@@ -105,6 +108,7 @@ export const useMatchStore = create<Store>((set, get) => ({
   sim: null,
   playing: true,
   speed: 1,
+  unitsPerPlanet: 3,
   selectedUnitId: null,
   loading: false,
   error: null,
@@ -147,14 +151,17 @@ export const useMatchStore = create<Store>((set, get) => ({
     set({ people });
   },
 
+  setUnitsPerPlanet: (n) =>
+    set({
+      unitsPerPlanet: Math.max(1, Math.min(24, Math.floor(n) || 1)),
+    }),
+
   generate: async () => {
     set({ loading: true, error: null });
     try {
-      const n = get().people.length;
-      // Soft unit budget scales with faction count; backend also rebalances
-      const maxUnits = n <= 4 ? 18 : n <= 10 ? 10 : 6;
+      const unitsPerPlanet = get().unitsPerPlanet;
       const match = await createMatch(get().people, {
-        max_units_per_faction: maxUnits,
+        units_per_planet: unitsPerPlanet,
         include_mixtures: true,
       });
       const sim = createSimFromMatch(match);

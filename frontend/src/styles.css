@@ -244,6 +244,34 @@ select {
   font-size: 0.95rem;
 }
 
+.sim-params {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem 0.7rem;
+  margin: 0.65rem 0 0.5rem;
+  background: #0d1117;
+}
+
+.sim-params h2 {
+  margin-top: 0.15rem;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.param-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.param-number {
+  width: 3.5rem;
+  text-align: center;
+}
+
 .faction-count-bar strong {
   font-size: 1.25rem;
   color: var(--accent);
