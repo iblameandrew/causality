@@ -1,5 +1,7 @@
 # Rotatory Attention
 
+![Multi-faction chart-spawned RTS banner](public/banner.jpg)
+
 Multi-faction **auto-sim RTS** where each birth chart becomes a partisan force on a shared isometric battlefield. Units are hierarchical linguistic children of chart features (planet-in-sign roots plus aspect mixtures). Factions resolve **conflict**, **affiliation**, or **neutrality** automatically.
 
 Combat exchanges use **energization** and **local density** (allies/enemies nearby), not flat ATK stats.
