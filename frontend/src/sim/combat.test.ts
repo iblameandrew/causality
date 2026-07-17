@@ -14,6 +14,7 @@ function unit(partial: Partial<SimUnit> & { id: string }): SimUnit {
     color: "#fff",
     name: "U",
     summary: "",
+    voicePrompt: "You are a test unit.",
     tier: "squad",
     lineage: "x",
     featureId: "f",

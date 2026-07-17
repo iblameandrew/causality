@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app.agents.fallback import expand_mixture_fallback, expand_root_fallback
 from app.agents.llm_client import expand_with_llm
+from app.agents.voice import build_voice_prompt
 from app.config import Settings
 from app.domain.models import (
     AgentNode,
@@ -70,12 +71,28 @@ def _parse_agent(feature_id: str, data: dict, tier: str) -> AgentNode:
     children = []
     for ch in data.get("children") or []:
         children.append(_parse_agent(feature_id, ch, "squad"))
+    name = str(data.get("name", "Unit"))[:48]
+    summary = str(data.get("summary", ""))
+    skills_final = skills or [SkillSpec(id="strike", name="Strike", effect="strike")]
+    voice = str(data.get("voice_prompt") or data.get("system_prompt") or "").strip()
+    if not voice:
+        voice = build_voice_prompt(
+            name=name,
+            summary=summary,
+            tier=tier,
+            role=str(data.get("role") or "") or None,
+            style=str(data.get("style") or "") or None,
+            lineage=str(data.get("lineage") or name),
+            skills=skills_final,
+            memories=memories,
+        )
     return AgentNode(
         feature_id=feature_id,
-        name=str(data.get("name", "Unit"))[:48],
-        summary=str(data.get("summary", "")),
+        name=name,
+        summary=summary,
+        voice_prompt=voice,
         attributes=attrs,
-        skills=skills or [SkillSpec(id="strike", name="Strike", effect="strike")],
+        skills=skills_final,
         memories=memories,
         children=children,
         tier=tier,  # type: ignore[arg-type]

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     max_mixtures_per_chart: int = 8
     max_units_per_faction: int = 24
-    prompt_version: str = "v1"
+    prompt_version: str = "v2"
 
     @property
     def cors_origin_list(self) -> list[str]:

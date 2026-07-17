@@ -132,6 +132,42 @@ FACTION_COLORS = [
 ]
 
 
+def faction_color(index: int) -> str:
+    """Distinct color for any faction index (unlimited charts)."""
+    if index < len(FACTION_COLORS):
+        return FACTION_COLORS[index]
+    # Golden-angle HSL cycle for arbitrarily many factions
+    hue = (index * 137.508) % 360.0
+    sat = 62 + (index % 5) * 5
+    light = 48 + (index % 3) * 6
+    return _hsl_to_hex(hue, sat, light)
+
+
+def _hsl_to_hex(h: float, s: float, l: float) -> str:
+    s /= 100.0
+    l /= 100.0
+    c = (1 - abs(2 * l - 1)) * s
+    x = c * (1 - abs((h / 60.0) % 2 - 1))
+    m = l - c / 2
+    if h < 60:
+        r, g, b = c, x, 0.0
+    elif h < 120:
+        r, g, b = x, c, 0.0
+    elif h < 180:
+        r, g, b = 0.0, c, x
+    elif h < 240:
+        r, g, b = 0.0, x, c
+    elif h < 300:
+        r, g, b = x, 0.0, c
+    else:
+        r, g, b = c, 0.0, x
+
+    def ch(v: float) -> str:
+        return f"{int(round((v + m) * 255)):02x}"
+
+    return f"#{ch(r)}{ch(g)}{ch(b)}"
+
+
 def normalize_sign(sign: str | None) -> str:
     if not sign:
         return "Ari"

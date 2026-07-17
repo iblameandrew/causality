@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.agents.voice import build_voice_prompt
 from app.domain.models import (
     AgentNode,
     FeatureGraph,
@@ -57,6 +58,19 @@ def flatten_agents(
             style = "/".join(feat.parent_styles)
         tier = force_tier or node.tier
         names = path + [node.name]
+        lineage = _lineage(feat, path)
+        voice = (node.voice_prompt or "").strip()
+        if not voice:
+            voice = build_voice_prompt(
+                name=node.name,
+                summary=node.summary,
+                tier=str(tier),
+                role=role if isinstance(role, str) else None,
+                style=style if isinstance(style, str) else None,
+                lineage=lineage,
+                skills=node.skills,
+                memories=node.memories,
+            )
         roster.append(
             UnitSpec(
                 unit_id=str(uuid.uuid4()),
@@ -65,8 +79,9 @@ def flatten_agents(
                 agent_path=names,
                 name=node.name,
                 summary=node.summary,
+                voice_prompt=voice,
                 tier=tier,  # type: ignore[arg-type]
-                lineage=_lineage(feat, path),
+                lineage=lineage,
                 attributes=node.attributes,
                 skills=node.skills,
                 memories=node.memories,

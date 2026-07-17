@@ -3,8 +3,10 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from app.config import get_settings
+from app.dialogue.service import converse
 from app.domain.models import (
     BirthInput,
+    DialogueRequest,
     FeaturesRequest,
     MatchRequest,
 )
@@ -56,3 +58,12 @@ def read_match(match_id: str):
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match.model_dump()
+
+
+@router.post("/api/dialogue")
+def unit_dialogue(body: DialogueRequest):
+    """Speak with a single thought-unit using its conversational voice prompt."""
+    try:
+        return converse(body).model_dump()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e

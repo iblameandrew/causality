@@ -233,6 +233,135 @@ select {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.6rem;
+  align-items: center;
+}
+
+.faction-count-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.faction-count-bar strong {
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.bulk-add {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.bulk-add input {
+  width: 4rem;
+}
+
+.ghost-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-weight: 600;
+  text-align: left;
+  flex: 1;
+}
+
+.faction-index {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.person-card header {
+  gap: 0.4rem;
+}
+
+.dialogue {
+  margin: 0.75rem 0 1rem;
+  padding: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0d1117;
+}
+
+.dialogue h2 {
+  margin-top: 0;
+}
+
+.voice-prompt {
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  max-height: 140px;
+  overflow: auto;
+  background: #010409;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem;
+  color: var(--muted);
+  margin: 0.4rem 0 0.6rem;
+}
+
+.chat-log {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0;
+  padding-right: 0.2rem;
+}
+
+.chat-bubble {
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.chat-bubble.user {
+  background: #1f2a3a;
+  border: 1px solid #2d4a6f;
+  align-self: flex-end;
+  max-width: 95%;
+}
+
+.chat-bubble.unit {
+  background: #1a2420;
+  border: 1px solid #2d4a3a;
+  align-self: flex-start;
+  max-width: 95%;
+}
+
+.chat-role {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.chat-form input {
+  flex: 1;
+}
+
+button.linkish {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  padding: 0;
+  font-size: 0.8rem;
+  text-decoration: underline;
 }
 
 @media (max-width: 960px) {

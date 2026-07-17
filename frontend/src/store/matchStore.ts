@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { createMatch } from "../api/client";
+import { createMatch, sendDialogue } from "../api/client";
 import { createSimFromMatch, stepSim, type SimState } from "../sim/engine";
-import type { BirthInput, MatchManifest, SimUnit } from "../sim/types";
+import type { BirthInput, ChatMessage, MatchManifest, SimUnit } from "../sim/types";
 
 export const PRESETS: BirthInput[] = [
   {
@@ -48,8 +48,13 @@ interface Store {
   selectedUnitId: string | null;
   loading: boolean;
   error: string | null;
+  /** Per-unit chat transcripts */
+  dialogues: Record<string, ChatMessage[]>;
+  dialogueBusy: boolean;
+  dialogueError: string | null;
   setPeople: (p: BirthInput[]) => void;
   addPerson: () => void;
+  addMany: (count: number) => void;
   removePerson: (index: number) => void;
   updatePerson: (index: number, patch: Partial<BirthInput>) => void;
   loadPresets: (count?: number) => void;
@@ -59,19 +64,40 @@ interface Store {
   selectUnit: (id: string | null) => void;
   tick: (dt: number) => void;
   selectedUnit: () => SimUnit | null;
+  clearDialogue: (unitId: string) => void;
+  sendUnitMessage: (unitId: string, message: string) => Promise<void>;
 }
 
-const emptyPerson = (): BirthInput => ({
-  name: "Person",
-  year: 1992,
-  month: 6,
-  day: 15,
-  hour: 12,
-  minute: 0,
-  lat: 51.5074,
-  lng: -0.1278,
-  tz_str: "Europe/London",
-});
+const LOCATIONS = [
+  { lat: 51.5074, lng: -0.1278, tz_str: "Europe/London" },
+  { lat: 40.7128, lng: -74.006, tz_str: "America/New_York" },
+  { lat: 41.9028, lng: 12.4964, tz_str: "Europe/Rome" },
+  { lat: 35.6762, lng: 139.6503, tz_str: "Asia/Tokyo" },
+  { lat: -33.8688, lng: 151.2093, tz_str: "Australia/Sydney" },
+  { lat: 19.4326, lng: -99.1332, tz_str: "America/Mexico_City" },
+  { lat: 55.7558, lng: 37.6173, tz_str: "Europe/Moscow" },
+  { lat: 1.3521, lng: 103.8198, tz_str: "Asia/Singapore" },
+];
+
+const emptyPerson = (index: number): BirthInput => {
+  const loc = LOCATIONS[index % LOCATIONS.length];
+  // Spread birth years so charts diversify when bulk-adding
+  const year = 1975 + (index * 7) % 35;
+  const month = 1 + (index * 3) % 12;
+  const day = 1 + (index * 5) % 28;
+  const hour = (index * 5) % 24;
+  return {
+    name: `Person ${index + 1}`,
+    year,
+    month,
+    day,
+    hour,
+    minute: (index * 11) % 60,
+    lat: loc.lat,
+    lng: loc.lng,
+    tz_str: loc.tz_str,
+  };
+};
 
 export const useMatchStore = create<Store>((set, get) => ({
   people: PRESETS.slice(0, 2),
@@ -82,32 +108,65 @@ export const useMatchStore = create<Store>((set, get) => ({
   selectedUnitId: null,
   loading: false,
   error: null,
+  dialogues: {},
+  dialogueBusy: false,
+  dialogueError: null,
 
   setPeople: (p) => set({ people: p }),
   addPerson: () =>
     set((s) => ({
-      people: [
-        ...s.people,
-        { ...emptyPerson(), name: `Person ${s.people.length + 1}` },
-      ],
+      people: [...s.people, emptyPerson(s.people.length)],
     })),
+  addMany: (count) =>
+    set((s) => {
+      const n = Math.max(0, Math.floor(count));
+      if (n === 0) return s;
+      const next = [...s.people];
+      for (let i = 0; i < n; i++) {
+        next.push(emptyPerson(next.length));
+      }
+      return { people: next };
+    }),
   removePerson: (index) =>
     set((s) => ({ people: s.people.filter((_, i) => i !== index) })),
   updatePerson: (index, patch) =>
     set((s) => ({
       people: s.people.map((p, i) => (i === index ? { ...p, ...patch } : p)),
     })),
-  loadPresets: (count = 2) => set({ people: PRESETS.slice(0, count) }),
+  loadPresets: (count = 2) => {
+    // Presets can be repeated/cycled so "load N" works past the short list
+    const n = Math.max(1, count);
+    const people: BirthInput[] = [];
+    for (let i = 0; i < n; i++) {
+      if (i < PRESETS.length) {
+        people.push({ ...PRESETS[i] });
+      } else {
+        people.push(emptyPerson(i));
+      }
+    }
+    set({ people });
+  },
 
   generate: async () => {
     set({ loading: true, error: null });
     try {
+      const n = get().people.length;
+      // Soft unit budget scales with faction count; backend also rebalances
+      const maxUnits = n <= 4 ? 18 : n <= 10 ? 10 : 6;
       const match = await createMatch(get().people, {
-        max_units_per_faction: 18,
+        max_units_per_faction: maxUnits,
         include_mixtures: true,
       });
       const sim = createSimFromMatch(match);
-      set({ match, sim, loading: false, playing: true, selectedUnitId: null });
+      set({
+        match,
+        sim,
+        loading: false,
+        playing: true,
+        selectedUnitId: null,
+        dialogues: {},
+        dialogueError: null,
+      });
     } catch (e) {
       set({
         loading: false,
@@ -118,7 +177,7 @@ export const useMatchStore = create<Store>((set, get) => ({
 
   setPlaying: (v) => set({ playing: v }),
   setSpeed: (v) => set({ speed: v }),
-  selectUnit: (id) => set({ selectedUnitId: id }),
+  selectUnit: (id) => set({ selectedUnitId: id, dialogueError: null }),
 
   tick: (dt) => {
     const { sim, match, playing, speed } = get();
@@ -132,5 +191,70 @@ export const useMatchStore = create<Store>((set, get) => ({
     const { sim, selectedUnitId } = get();
     if (!sim || !selectedUnitId) return null;
     return sim.units.find((u) => u.id === selectedUnitId) ?? null;
+  },
+
+  clearDialogue: (unitId) =>
+    set((s) => {
+      const next = { ...s.dialogues };
+      delete next[unitId];
+      return { dialogues: next, dialogueError: null };
+    }),
+
+  sendUnitMessage: async (unitId, message) => {
+    const text = message.trim();
+    if (!text) return;
+    const { sim, match, dialogues } = get();
+    const unit = sim?.units.find((u) => u.id === unitId);
+    if (!unit) return;
+
+    const history = dialogues[unitId] ?? [];
+    const withUser: ChatMessage[] = [...history, { role: "user", content: text }];
+    set({
+      dialogues: { ...dialogues, [unitId]: withUser },
+      dialogueBusy: true,
+      dialogueError: null,
+    });
+
+    const faction = match?.factions.find((f) => f.chart_id === unit.factionId);
+
+    try {
+      const res = await sendDialogue({
+        unit_id: unit.id,
+        match_id: match?.match_id,
+        name: unit.name,
+        voice_prompt: unit.voicePrompt,
+        summary: unit.summary,
+        lineage: unit.lineage,
+        role: unit.role,
+        style: unit.style,
+        tier: unit.tier,
+        skills: unit.skills,
+        memories: unit.memories,
+        runtime: {
+          hp: unit.hp,
+          max_hp: unit.maxHp,
+          energy: unit.energy,
+          allies_near: unit.alliesNear,
+          enemies_near: unit.enemiesNear,
+          alive: unit.alive,
+          faction_name: faction?.name,
+        },
+        history,
+        message: text,
+      });
+      const withReply: ChatMessage[] = [
+        ...withUser,
+        { role: "assistant", content: res.reply },
+      ];
+      set((s) => ({
+        dialogues: { ...s.dialogues, [unitId]: withReply },
+        dialogueBusy: false,
+      }));
+    } catch (e) {
+      set({
+        dialogueBusy: false,
+        dialogueError: e instanceof Error ? e.message : String(e),
+      });
+    }
   },
 }));

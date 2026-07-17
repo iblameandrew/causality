@@ -40,14 +40,19 @@ export function createSimFromMatch(match: MatchManifest): SimState {
   const factions = match.factions;
   const units: SimUnit[] = [];
 
+  const nF = Math.max(1, factions.length);
+  // Spawn radius grows with faction count so unlimited charts don't stack
+  const ringRadius = Math.min(mapW, mapH) * (0.18 + Math.min(0.22, nF * 0.012));
+
   factions.forEach((faction, fi) => {
-    const angle = (fi / Math.max(1, factions.length)) * Math.PI * 2;
-    const cx = mapW / 2 + Math.cos(angle) * (mapW * 0.22);
-    const cy = mapH / 2 + Math.sin(angle) * (mapH * 0.22);
+    const angle = (fi / nF) * Math.PI * 2 - Math.PI / 2;
+    const cx = mapW / 2 + Math.cos(angle) * ringRadius;
+    const cy = mapH / 2 + Math.sin(angle) * ringRadius;
 
     faction.roster.forEach((u, ui) => {
       const ring = 1 + Math.floor(ui / 6);
-      const a = ui * 0.9 + rng() * 0.3;
+      const a = (ui / Math.max(1, faction.roster.length)) * Math.PI * 2 + angle;
+      const spread = 0.9 + ring * 1.15;
       const baseline = clamp01(0.45 + 0.35 * (u.attributes.will / 1.5));
       units.push({
         id: u.unit_id,
@@ -55,6 +60,7 @@ export function createSimFromMatch(match: MatchManifest): SimState {
         color: faction.color,
         name: u.name,
         summary: u.summary,
+        voicePrompt: u.voice_prompt || "",
         tier: u.tier,
         lineage: u.lineage,
         featureId: u.feature_id,
@@ -63,8 +69,8 @@ export function createSimFromMatch(match: MatchManifest): SimState {
         maxHp: u.attributes.hp,
         hp: u.attributes.hp,
         pos: [
-          cx + Math.cos(a) * ring * 1.4 + (rng() - 0.5),
-          cy + Math.sin(a) * ring * 1.4 + (rng() - 0.5),
+          cx + Math.cos(a) * spread + (rng() - 0.5) * 0.6,
+          cy + Math.sin(a) * spread + (rng() - 0.5) * 0.6,
         ],
         vel: [0, 0],
         attrs: { ...u.attributes },

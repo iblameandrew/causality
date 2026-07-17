@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.agents.voice import build_voice_prompt
 from app.domain.models import (
     AgentNode,
     Attributes,
@@ -109,11 +110,50 @@ def _skills_for(role: str, style: str, link: str | None = None) -> list[SkillSpe
 def expand_root_fallback(root: RootFeature) -> AgentNode:
     attrs = _attrs_for_root(root)
     name = f"{root.style_label} {root.role_label}"
+    skills_cap = _skills_for(root.role, root.style)
+    mem_cap = [
+        MemorySpec(
+            title="Core Pattern",
+            vignette=f"Carries the primary {root.role_label.lower()} signature shaped by {root.style_label.lower()}.",
+        )
+    ]
+    summary_cap = f"Captain of {root.role_label} expressed through {root.style_label}."
+
+    cadet_skills = skills_cap[:2]
+    cadet_mem = [
+        MemorySpec(
+            title="First Form",
+            vignette=f"Learned the outer edges of {root.style_label.lower()} practice.",
+        )
+    ]
+    cadet_summary = f"Linguistic child of {name}; lighter and faster."
+    cadet_name = f"{name} Cadet"
+
+    echo_skills = skills_cap[:2]
+    echo_mem = [
+        MemorySpec(
+            title="Side Channel",
+            vignette="Remembers the quieter pathway of the same drive.",
+        )
+    ]
+    echo_summary = f"Secondary expression of {root.role_label}."
+    echo_name = f"{name} Echo"
+
     children = [
         AgentNode(
             feature_id=root.id,
-            name=f"{name} Cadet",
-            summary=f"Linguistic child of {name}; lighter and faster.",
+            name=cadet_name,
+            summary=cadet_summary,
+            voice_prompt=build_voice_prompt(
+                name=cadet_name,
+                summary=cadet_summary,
+                tier="squad",
+                role=root.role,
+                style=root.style,
+                lineage=f"{root.role_label}/{root.style_label} → {cadet_name}",
+                skills=cadet_skills,
+                memories=cadet_mem,
+            ),
             attributes=Attributes(
                 hp=attrs.hp * 0.7,
                 speed=attrs.speed * 1.15,
@@ -124,20 +164,25 @@ def expand_root_fallback(root: RootFeature) -> AgentNode:
                 structure=attrs.structure * 0.9,
                 damage=attrs.damage * 0.75,
             ),
-            skills=_skills_for(root.role, root.style)[:2],
-            memories=[
-                MemorySpec(
-                    title="First Form",
-                    vignette=f"Learned the outer edges of {root.style_label.lower()} practice.",
-                )
-            ],
+            skills=cadet_skills,
+            memories=cadet_mem,
             children=[],
             tier="squad",
         ),
         AgentNode(
             feature_id=root.id,
-            name=f"{name} Echo",
-            summary=f"Secondary expression of {root.role_label}.",
+            name=echo_name,
+            summary=echo_summary,
+            voice_prompt=build_voice_prompt(
+                name=echo_name,
+                summary=echo_summary,
+                tier="squad",
+                role=root.role,
+                style=root.style,
+                lineage=f"{root.role_label}/{root.style_label} → {echo_name}",
+                skills=echo_skills,
+                memories=echo_mem,
+            ),
             attributes=Attributes(
                 hp=attrs.hp * 0.65,
                 speed=attrs.speed * 1.05,
@@ -148,13 +193,8 @@ def expand_root_fallback(root: RootFeature) -> AgentNode:
                 structure=attrs.structure * 0.85,
                 damage=attrs.damage * 0.7,
             ),
-            skills=_skills_for(root.role, root.style)[:2],
-            memories=[
-                MemorySpec(
-                    title="Side Channel",
-                    vignette="Remembers the quieter pathway of the same drive.",
-                )
-            ],
+            skills=echo_skills,
+            memories=echo_mem,
             children=[],
             tier="squad",
         ),
@@ -162,15 +202,20 @@ def expand_root_fallback(root: RootFeature) -> AgentNode:
     return AgentNode(
         feature_id=root.id,
         name=name,
-        summary=f"Captain of {root.role_label} expressed through {root.style_label}.",
+        summary=summary_cap,
+        voice_prompt=build_voice_prompt(
+            name=name,
+            summary=summary_cap,
+            tier="captain",
+            role=root.role,
+            style=root.style,
+            lineage=f"{root.role_label}/{root.style_label}",
+            skills=skills_cap,
+            memories=mem_cap,
+        ),
         attributes=attrs,
-        skills=_skills_for(root.role, root.style),
-        memories=[
-            MemorySpec(
-                title="Core Pattern",
-                vignette=f"Carries the primary {root.role_label.lower()} signature shaped by {root.style_label.lower()}.",
-            )
-        ],
+        skills=skills_cap,
+        memories=mem_cap,
         children=children,
         tier="captain",
     )
@@ -203,18 +248,36 @@ def expand_mixture_fallback(mix: MixtureFeature) -> AgentNode:
         structure=1.05,
         damage=12.0 * dmg * mult,
     )
+    skills = _skills_for(
+        mix.parent_roles[0] if mix.parent_roles else "drive",
+        mix.parent_styles[0] if mix.parent_styles else "ignite",
+        mix.link,
+    )
+    memories = [
+        MemorySpec(
+            title="Confluence",
+            vignette=f"Two signatures meet as {mix.link}; neither fully cancels the other.",
+        )
+    ]
+    summary = f"Mixture of {roles} via {mix.link} ({styles})."
+    unit_name = name[:48]
     return AgentNode(
         feature_id=mix.id,
-        name=name[:48],
-        summary=f"Mixture of {roles} via {mix.link} ({styles}).",
+        name=unit_name,
+        summary=summary,
+        voice_prompt=build_voice_prompt(
+            name=unit_name,
+            summary=summary,
+            tier="hybrid",
+            role=roles,
+            style=styles,
+            lineage=f"mix:{mix.link}",
+            skills=skills,
+            memories=memories,
+        ),
         attributes=attrs,
-        skills=_skills_for(mix.parent_roles[0] if mix.parent_roles else "drive", mix.parent_styles[0] if mix.parent_styles else "ignite", mix.link),
-        memories=[
-            MemorySpec(
-                title="Confluence",
-                vignette=f"Two signatures meet as {mix.link}; neither fully cancels the other.",
-            )
-        ],
+        skills=skills,
+        memories=memories,
         children=[],
         tier="hybrid",
     )

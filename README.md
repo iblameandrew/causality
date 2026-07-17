@@ -68,7 +68,7 @@ npm run dev
 
 Open http://localhost:5173 — the Vite proxy forwards `/api` to the backend.
 
-Add one or more people (presets available), **Generate match**, and watch their thought-agents take the field. Inspect any unit for lineage, memories, energization, and how crowded its aura is.
+Add **any number of people** (no faction cap — use + chart, +5, or bulk Add N). Presets seed a few charts; bulk-add fills diversified birth data. **Generate match** and watch their thought-agents take the field. Inspect any unit for lineage, memories, energization, and how crowded its aura is. Map size and units-per-faction scale so large multi-chart matches stay playable.
 
 ## Environment
 
@@ -89,6 +89,9 @@ Add one or more people (presets available), **Generate match**, and watch their 
 | POST | `/api/features` | Feature graph (roots + mixtures) for one person |
 | POST | `/api/match` | Full multi-person simulacra bootstrap |
 | GET | `/api/match/{id}` | Cached match |
+| POST | `/api/dialogue` | Talk to a unit via its `voice_prompt` |
+
+Each roster unit carries a **`voice_prompt`** — a conversational system prompt so that thought can be spoken with. Select a unit in the inspector to open dialogue (LLM if `XAI_API_KEY` is set, otherwise persona fallback).
 
 ## Stack
 

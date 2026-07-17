@@ -11,6 +11,9 @@ export function SimControls() {
   if (!match || !sim) return null;
 
   const alive = sim.units.filter((u) => u.alive).length;
+  const factions = match.factions;
+  const showBadges = factions.slice(0, 8);
+  const extra = factions.length - showBadges.length;
 
   return (
     <div className="overlay-bar">
@@ -28,14 +31,16 @@ export function SimControls() {
         </button>
       ))}
       <span className="badge">
-        t={sim.time.toFixed(1)}s · {alive}/{sim.units.length} alive
+        t={sim.time.toFixed(1)}s · {alive}/{sim.units.length} alive ·{" "}
+        {factions.length} factions
       </span>
-      {match.factions.map((f) => (
+      {showBadges.map((f) => (
         <span className="badge" key={f.chart_id}>
           <span className="dot" style={{ background: f.color }} />
           {f.name} ({f.roster.length})
         </span>
       ))}
+      {extra > 0 && <span className="badge">+{extra} more</span>}
     </div>
   );
 }

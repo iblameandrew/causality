@@ -21,11 +21,13 @@ def expand_with_llm(feature_payload: dict[str, Any], settings: Settings) -> dict
         "You design RTS unit archetypes from abstract role+style features. "
         "Never use astrology jargon in names or summaries. "
         "Return ONLY valid JSON matching the schema: "
-        '{"name": str, "summary": str, '
+        '{"name": str, "summary": str, "voice_prompt": str, '
         '"attributes": {"hp":num,"speed":num,"range":num,"armor":num,"will":num,"empathy":num,"structure":num,"damage":num}, '
         '"skills":[{"id":str,"name":str,"kind":"attack|support|control|passive","cooldown":num,"effect":str,"power":num}], '
         '"memories":[{"title":str,"vignette":str}], '
-        '"children":[{"name":str,"summary":str,"attributes":{...},"skills":[...],"memories":[...]}] } '
+        '"children":[{"name":str,"summary":str,"voice_prompt":str,"attributes":{...},"skills":[...],"memories":[...]}] } '
+        "voice_prompt is a conversational system prompt (second person or direct persona instructions) "
+        "so a user can dialogue with this thought-agent in character. "
         "Children depth max 2 units. Clamp attributes: hp 60-180, speed 0.5-2.2, damage 5-28, others 0.3-2.5. "
         "Skills effect must be one of: strike, surge, bolster, brace, attune, rupture."
     )

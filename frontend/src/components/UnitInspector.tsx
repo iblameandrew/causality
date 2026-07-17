@@ -1,4 +1,5 @@
 import { useMatchStore } from "../store/matchStore";
+import { UnitDialogue } from "./UnitDialogue";
 
 export function UnitInspector() {
   const unit = useMatchStore((s) => s.selectedUnit());
@@ -7,7 +8,9 @@ export function UnitInspector() {
     return (
       <div>
         <h2>Inspector</h2>
-        <p className="muted">Select a unit on the field or roster.</p>
+        <p className="muted">
+          Select a unit on the field or roster to inspect and dialogue with it.
+        </p>
       </div>
     );
   }
@@ -25,6 +28,8 @@ export function UnitInspector() {
         <span className="dot" style={{ background: unit.color }} />
         {unit.tier} · {unit.alive ? "alive" : "down"}
       </div>
+
+      <UnitDialogue unit={unit} />
 
       <h2>HP</h2>
       <div className="meter">

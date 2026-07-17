@@ -32,6 +32,8 @@ export interface UnitSpec {
   agent_path: string[];
   name: string;
   summary: string;
+  /** Conversational system prompt for dialogue with this thought-unit. */
+  voice_prompt: string;
   tier: "captain" | "squad" | "hybrid";
   lineage: string;
   attributes: Attributes;
@@ -39,6 +41,11 @@ export interface UnitSpec {
   memories: MemorySpec[];
   role?: string | null;
   style?: string | null;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 export interface FactionManifest {
@@ -88,6 +95,7 @@ export interface SimUnit {
   color: string;
   name: string;
   summary: string;
+  voicePrompt: string;
   tier: UnitSpec["tier"];
   lineage: string;
   featureId: string;

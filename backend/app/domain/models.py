@@ -120,6 +120,10 @@ class AgentNode(BaseModel):
     feature_id: str
     name: str
     summary: str = ""
+    voice_prompt: str = Field(
+        default="",
+        description="System prompt that defines how this thought-agent speaks in dialogue.",
+    )
     attributes: Attributes = Field(default_factory=Attributes)
     skills: list[SkillSpec] = Field(default_factory=list)
     memories: list[MemorySpec] = Field(default_factory=list)
@@ -152,6 +156,10 @@ class UnitSpec(BaseModel):
     agent_path: list[str]
     name: str
     summary: str = ""
+    voice_prompt: str = Field(
+        default="",
+        description="Conversational system prompt for dialogue with this unit.",
+    )
     tier: Literal["captain", "squad", "hybrid"]
     lineage: str
     attributes: Attributes
@@ -159,6 +167,44 @@ class UnitSpec(BaseModel):
     memories: list[MemorySpec]
     role: str | None = None
     style: str | None = None
+
+
+class DialogueMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class UnitRuntimeState(BaseModel):
+    hp: float | None = None
+    max_hp: float | None = None
+    energy: float | None = None
+    allies_near: int | None = None
+    enemies_near: int | None = None
+    alive: bool | None = True
+    faction_name: str | None = None
+
+
+class DialogueRequest(BaseModel):
+    unit_id: str
+    match_id: str | None = None
+    name: str
+    voice_prompt: str
+    summary: str = ""
+    lineage: str = ""
+    role: str | None = None
+    style: str | None = None
+    tier: str | None = None
+    skills: list[SkillSpec] = Field(default_factory=list)
+    memories: list[MemorySpec] = Field(default_factory=list)
+    runtime: UnitRuntimeState = Field(default_factory=UnitRuntimeState)
+    history: list[DialogueMessage] = Field(default_factory=list)
+    message: str
+
+
+class DialogueResponse(BaseModel):
+    reply: str
+    mode: Literal["llm", "fallback"]
+    unit_id: str
 
 
 class FactionManifest(BaseModel):
